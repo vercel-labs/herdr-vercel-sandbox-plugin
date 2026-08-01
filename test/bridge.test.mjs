@@ -58,6 +58,11 @@ if (subcommand === "stop" && process.env.HERDR_FAKE_STOP_FAILURE) {
   process.stderr.write(process.env.HERDR_FAKE_STOP_FAILURE + "\\n");
   process.exit(1);
 }
+if (subcommand === "stop" && process.env.HERDR_FAKE_STOP_SOFT_FAILURE) {
+  // Real CLI 56.2.0 behavior: spinner failure printed to stdout, exit code 0.
+  process.stdout.write(process.env.HERDR_FAKE_STOP_SOFT_FAILURE + "\\n");
+  process.exit(0);
+}
 if (subcommand === "copy" && process.env.HERDR_FAKE_PATCH) {
   const positional = args.filter((value, index) => index > 1 && !["--scope", "--project"].includes(args[index - 1]) && !value.startsWith("--"));
   const source = positional.at(-2);
@@ -66,6 +71,9 @@ if (subcommand === "copy" && process.env.HERDR_FAKE_PATCH) {
 }
 if (subcommand === "exec" && args.join(" ").includes("fixture-agent 1.0.0")) {
   process.stdout.write("fixture-agent 1.0.0\\n");
+}
+if (subcommand === "exec" && args.join(" ").includes("rev-parse")) {
+  process.stdout.write("0123456789abcdef0123456789abcdef01234567\\n");
 }
 `, "utf8");
   await chmod(executable, 0o755);
@@ -195,6 +203,26 @@ test("bridge recognizes only explicit not-found and fails closed for every other
   }
 });
 
+test("stop treats a zero-exit CLI failure as a failure, not success", async () => {
+  // vercel sandbox stop exits 0 while printing "✖ ..." on failure (measured on
+  // CLI 56.2.0). The bridge must read the output, not trust the exit code.
+  const f = await fixture({ remoteCreated: true, prepared: true, lifecycleState: "ready" });
+  try {
+    const result = runBridge(f, "stop", {
+      HERDR_FAKE_STOP_SOFT_FAILURE:
+        "✖ Named sandbox 'herdr-fixture-agent-test' not found for this project.\n├▶ status code: 404 Not Found",
+    });
+    assert.notEqual(result.status, 0, "soft failure must fail the stop action");
+    assert.match(result.stderr, /missing; nothing was stopped/);
+    const state = await loadState(f.stateDir);
+    assert.equal(state.panes[PANE_ID].lifecycleState, "missing");
+    assert.equal(state.panes[PANE_ID].lastError.kind, "not-found");
+    assert.equal(state.panes[PANE_ID].stoppedAt, undefined);
+  } finally {
+    await rm(f.dir, { recursive: true, force: true });
+  }
+});
+
 test("stop updates state only after remote success and always dispatches the saved target", async () => {
   const f = await fixture({ remoteCreated: true, prepared: true, lifecycleState: "ready" });
   try {
@@ -251,6 +279,36 @@ test("apply crosses the bridge boundary with a binary patch, preserves complex c
     assert.ok(recorded.some((args) => isCall(args, "exec") && args.includes("rm")));
     const after = new Set((await readdir(tmpdir())).filter((name) => name.startsWith("herdr-patch-")));
     assert.deepEqual(after, before);
+  } finally {
+    await rm(f.dir, { recursive: true, force: true });
+  }
+});
+
+test("apply advances the export marker so a second apply of the same changes succeeds instead of conflicting", async () => {
+  const f = await fixture({ remoteCreated: true, prepared: true, lifecycleState: "ready" });
+  try {
+    const patchPath = await makePatch(f);
+    const first = runBridge(f, "apply", { HERDR_FAKE_PATCH: patchPath });
+    assert.equal(first.status, 0, first.stderr);
+    let state = await loadState(f.stateDir);
+    assert.equal(state.panes[PANE_ID].lastAppliedExportCommit, "0123456789abcdef0123456789abcdef01234567");
+    let recorded = await calls(f);
+    assert.ok(
+      recorded.some((args) => isCall(args, "exec") && args.join(" ").includes("git tag -f herdr-baseline herdr-export")),
+      "the remote baseline advances after a successful local apply",
+    );
+
+    // The same cumulative patch arrives again (fake CLI serves the same file):
+    // the bridge must detect it is already applied and exit cleanly.
+    await writeFile(f.logPath, "");
+    const second = runBridge(f, "apply", { HERDR_FAKE_PATCH: patchPath });
+    assert.equal(second.status, 0, second.stderr);
+    assert.match(second.stdout, /already present locally/);
+    recorded = await calls(f);
+    assert.ok(
+      recorded.some((args) => isCall(args, "exec") && args.join(" ").includes("git tag -f herdr-baseline '0123456789abcdef0123456789abcdef01234567'")),
+      "the baseline re-syncs from local state before exporting",
+    );
   } finally {
     await rm(f.dir, { recursive: true, force: true });
   }

@@ -1,8 +1,1110 @@
-Canonical URL: https://opencode.ai/docs/cli/
-Retrieved: 2026-08-01
+<!DOCTYPE html><html lang="en" dir="ltr" data-theme="dark" data-has-toc data-has-sidebar class="astro-cyznwi7u"> <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>CLI | OpenCode</title><link rel="canonical" href="https://opencode.ai/docs/cli/"/><link rel="alternate" hreflang="en" href="https://opencode.ai/docs/cli/"/><link rel="alternate" hreflang="ar" href="https://opencode.ai/docs/ar/cli/"/><link rel="alternate" hreflang="bs-BA" href="https://opencode.ai/docs/bs/cli/"/><link rel="alternate" hreflang="da-DK" href="https://opencode.ai/docs/da/cli/"/><link rel="alternate" hreflang="de-DE" href="https://opencode.ai/docs/de/cli/"/><link rel="alternate" hreflang="es-ES" href="https://opencode.ai/docs/es/cli/"/><link rel="alternate" hreflang="fr-FR" href="https://opencode.ai/docs/fr/cli/"/><link rel="alternate" hreflang="it-IT" href="https://opencode.ai/docs/it/cli/"/><link rel="alternate" hreflang="ja-JP" href="https://opencode.ai/docs/ja/cli/"/><link rel="alternate" hreflang="ko-KR" href="https://opencode.ai/docs/ko/cli/"/><link rel="alternate" hreflang="nb-NO" href="https://opencode.ai/docs/nb/cli/"/><link rel="alternate" hreflang="pl-PL" href="https://opencode.ai/docs/pl/cli/"/><link rel="alternate" hreflang="pt-BR" href="https://opencode.ai/docs/pt-br/cli/"/><link rel="alternate" hreflang="ru-RU" href="https://opencode.ai/docs/ru/cli/"/><link rel="alternate" hreflang="th-TH" href="https://opencode.ai/docs/th/cli/"/><link rel="alternate" hreflang="tr-TR" href="https://opencode.ai/docs/tr/cli/"/><link rel="alternate" hreflang="zh-CN" href="https://opencode.ai/docs/zh-cn/cli/"/><link rel="alternate" hreflang="zh-TW" href="https://opencode.ai/docs/zh-tw/cli/"/><link rel="sitemap" href="/docs/sitemap-index.xml"/><link rel="icon" href="/favicon-v3.ico" sizes="32x32"/><link rel="icon" type="image/png" href="/favicon-96x96-v3.png" sizes="96x96"/><link rel="apple-touch-icon" href="/apple-touch-icon-v3.png" sizes="180x180"/><link rel="shortcut icon" href="/docs/favicon-v3.svg" type="image/svg+xml"/><meta name="generator" content="Astro v5.7.13"/><meta name="generator" content="Starlight v0.34.3"/><meta property="og:title" content="CLI"/><meta property="og:type" content="article"/><meta property="og:url" content="https://opencode.ai/docs/cli/"/><meta property="og:locale" content="en"/><meta property="og:description" content="OpenCode CLI options and commands."/><meta property="og:site_name" content="OpenCode"/><meta name="twitter:card" content="summary_large_image"/><meta name="description" content="OpenCode CLI options and commands."/><meta property="og:image" content="https://social-cards.sst.dev/opencode-docs/Q0xJ.png?desc=OpenCode%20CLI%20options%20and%20commands.">
+  <meta property="twitter:image" content="https://social-cards.sst.dev/opencode-docs/Q0xJ.png?desc=OpenCode%20CLI%20options%20and%20commands."><script>
+	window.StarlightThemeProvider = (() => {
+		const storedTheme =
+			typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		const theme =
+			storedTheme ||
+			(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+		document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+		return {
+			updatePickers(theme = storedTheme || 'auto') {
+				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
+					const select = picker.querySelector('select');
+					if (select) select.value = theme;
+					/** @type {HTMLTemplateElement | null} */
+					const tmpl = document.querySelector(`#theme-icons`);
+					const newIcon = tmpl && tmpl.content.querySelector('.' + theme);
+					if (newIcon) {
+						const oldIcon = picker.querySelector('svg.label-icon');
+						if (oldIcon) {
+							oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
+						}
+					}
+				});
+			},
+		};
+	})();
+</script><template id="theme-icons"><svg aria-hidden="true" class="light astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm.64 5-.71.71a1 1 0 0 0 0 1.41 1 1 0 0 0 1.41 0l.71-.71A1 1 0 0 0 5.64 17ZM12 5a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1Zm5.66 2.34a1 1 0 0 0 .7-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.66.71a1 1 0 0 0 0 1.41 1 1 0 0 0 .66.29Zm-12-.29a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1.004 1.004 0 1 0-1.43 1.41l.73.71ZM21 11h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-2.64 6A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.76-.66ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Zm0 9a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0 3.5a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/></svg><svg aria-hidden="true" class="dark astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.64 13a1 1 0 0 0-1.05-.14 8.049 8.049 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05Zm-9.5 6.69A8.14 8.14 0 0 1 7.08 5.22v.27a10.15 10.15 0 0 0 10.14 10.14 9.784 9.784 0 0 0 2.1-.22 8.11 8.11 0 0 1-7.18 4.32v-.04Z"/></svg><svg aria-hidden="true" class="auto astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg></template><link rel="stylesheet" href="/docs/_astro/print.DNXP8c50.css" media="print"><link rel="stylesheet" href="/docs/_astro/_id_.0W9MMnBd.css">
+<style>@layer starlight.components{:root{--sl-badge-default-border: var(--sl-color-accent);--sl-badge-default-bg: var(--sl-color-accent-low);--sl-badge-default-text: #fff;--sl-badge-note-border: var(--sl-color-blue);--sl-badge-note-bg: var(--sl-color-blue-low);--sl-badge-note-text: #fff;--sl-badge-danger-border: var(--sl-color-red);--sl-badge-danger-bg: var(--sl-color-red-low);--sl-badge-danger-text: #fff;--sl-badge-success-border: var(--sl-color-green);--sl-badge-success-bg: var(--sl-color-green-low);--sl-badge-success-text: #fff;--sl-badge-caution-border: var(--sl-color-orange);--sl-badge-caution-bg: var(--sl-color-orange-low);--sl-badge-caution-text: #fff;--sl-badge-tip-border: var(--sl-color-purple);--sl-badge-tip-bg: var(--sl-color-purple-low);--sl-badge-tip-text: #fff}[data-theme=light]:root{--sl-badge-default-bg: var(--sl-color-accent-high);--sl-badge-note-bg: var(--sl-color-blue-high);--sl-badge-danger-bg: var(--sl-color-red-high);--sl-badge-success-bg: var(--sl-color-green-high);--sl-badge-caution-bg: var(--sl-color-orange-high);--sl-badge-tip-bg: var(--sl-color-purple-high)}.sl-badge:where(.astro-ubkbfowe){display:inline-block;border:1px solid var(--sl-color-border-badge);border-radius:.25rem;font-family:var(--sl-font-system-mono);line-height:normal;color:var(--sl-color-text-badge);background-color:var(--sl-color-bg-badge);overflow-wrap:anywhere}.sidebar-content .sl-badge:where(.astro-ubkbfowe){line-height:1;font-size:var(--sl-text-xs);padding:.125rem .375rem}.sidebar-content a[aria-current=page]>.sl-badge:where(.astro-ubkbfowe){--sl-color-bg-badge: transparent;--sl-color-border-badge: currentColor;color:inherit}.default:where(.astro-ubkbfowe){--sl-color-bg-badge: var(--sl-badge-default-bg);--sl-color-border-badge: var(--sl-badge-default-border);--sl-color-text-badge: var(--sl-badge-default-text)}.note:where(.astro-ubkbfowe){--sl-color-bg-badge: var(--sl-badge-note-bg);--sl-color-border-badge: var(--sl-badge-note-border);--sl-color-text-badge: var(--sl-badge-note-text)}.danger:where(.astro-ubkbfowe){--sl-color-bg-badge: var(--sl-badge-danger-bg);--sl-color-border-badge: var(--sl-badge-danger-border);--sl-color-text-badge: var(--sl-badge-danger-text)}.success:where(.astro-ubkbfowe){--sl-color-bg-badge: var(--sl-badge-success-bg);--sl-color-border-badge: var(--sl-badge-success-border);--sl-color-text-badge: var(--sl-badge-success-text)}.tip:where(.astro-ubkbfowe){--sl-color-bg-badge: var(--sl-badge-tip-bg);--sl-color-border-badge: var(--sl-badge-tip-border);--sl-color-text-badge: var(--sl-badge-tip-text)}.caution:where(.astro-ubkbfowe){--sl-color-bg-badge: var(--sl-badge-caution-bg);--sl-color-border-badge: var(--sl-badge-caution-border);--sl-color-text-badge: var(--sl-badge-caution-text)}.small:where(.astro-ubkbfowe){font-size:var(--sl-text-xs);padding:.125rem .25rem}.medium:where(.astro-ubkbfowe){font-size:var(--sl-text-sm);padding:.175rem .35rem}.large:where(.astro-ubkbfowe){font-size:var(--sl-text-base);padding:.225rem .45rem}.sl-markdown-content :is(h1,h2,h3,h4,h5,h6) .sl-badge:where(.astro-ubkbfowe){vertical-align:middle}}
+@layer starlight.components{svg:where(.astro-36bnt3z5){color:var(--sl-icon-color);font-size:var(--sl-icon-size, 1em);width:1em;height:1em}}
+@layer starlight.components{starlight-tabs:where(.astro-epgqhmia){display:block}.tablist-wrapper:where(.astro-epgqhmia){overflow-x:auto}:where(.astro-epgqhmia)[role=tablist]{display:flex;list-style:none;border-bottom:2px solid var(--sl-color-gray-5);padding:0}.tab:where(.astro-epgqhmia){margin-bottom:-2px}.tab:where(.astro-epgqhmia)>:where(.astro-epgqhmia)[role=tab]{display:flex;align-items:center;gap:.5rem;padding:0 1.25rem;text-decoration:none;border-bottom:2px solid var(--sl-color-gray-5);color:var(--sl-color-gray-3);outline-offset:var(--sl-outline-offset-inside);overflow-wrap:initial}.tab:where(.astro-epgqhmia) :where(.astro-epgqhmia)[role=tab][aria-selected=true]{color:var(--sl-color-white);border-color:var(--sl-color-text-accent);font-weight:600}.tablist-wrapper:where(.astro-epgqhmia)~[role=tabpanel]{margin-top:1rem}}
+@layer starlight.components{.sl-steps{--bullet-size: calc(var(--sl-line-height) * 1rem);--bullet-margin: .375rem;list-style:none;counter-reset:steps-counter var(--sl-steps-start, 0);padding-inline-start:0}.sl-steps>li{counter-increment:steps-counter;position:relative;padding-inline-start:calc(var(--bullet-size) + 1rem);padding-bottom:1px;min-height:calc(var(--bullet-size) + var(--bullet-margin))}.sl-steps>li+li{margin-top:0}.sl-steps>li:before{content:counter(steps-counter);position:absolute;top:0;inset-inline-start:0;width:var(--bullet-size);height:var(--bullet-size);line-height:var(--bullet-size);font-size:var(--sl-text-xs);font-weight:600;text-align:center;color:var(--sl-color-white);background-color:var(--sl-color-gray-6);border-radius:99rem;box-shadow:inset 0 0 0 1px var(--sl-color-gray-5)}.sl-steps>li:after{--guide-width: 1px;content:"";position:absolute;top:calc(var(--bullet-size) + var(--bullet-margin));bottom:var(--bullet-margin);inset-inline-start:calc((var(--bullet-size) - var(--guide-width)) / 2);width:var(--guide-width);background-color:var(--sl-color-hairline-light)}}@layer starlight.content{.sl-steps>li>:first-child{--lh: calc(1em * var(--sl-line-height));--shift-y: calc(.5 * (var(--bullet-size) - var(--lh)));transform:translateY(var(--shift-y));margin-bottom:var(--shift-y)}.sl-steps>li>:first-child:where(h1,h2,h3,h4,h5,h6){--lh: calc(1em * var(--sl-line-height-headings))}@supports (--prop: 1lh){.sl-steps>li>:first-child{--lh: 1lh}}}
+@layer starlight.components{.sl-link-button:where(.astro-lyj5jyyz){align-items:center;border:1px solid transparent;border-radius:999rem;display:inline-flex;font-size:var(--sl-text-sm);gap:.5em;line-height:1.1875;outline-offset:.25rem;padding:.4375rem 1.125rem;text-decoration:none}.sl-link-button:where(.astro-lyj5jyyz).primary{background:var(--sl-color-text-accent);border-color:var(--sl-color-text-accent);color:var(--sl-color-black)}.sl-link-button:where(.astro-lyj5jyyz).primary:hover{color:var(--sl-color-black)}.sl-link-button:where(.astro-lyj5jyyz).secondary{border-color:inherit;color:var(--sl-color-white)}.sl-link-button:where(.astro-lyj5jyyz).minimal{color:var(--sl-color-white);padding-inline:0}.sl-link-button:where(.astro-lyj5jyyz) svg{flex-shrink:0}@media(min-width:50rem){.sl-link-button:where(.astro-lyj5jyyz){font-size:var(--sl-text-base);padding:.9375rem 1.25rem}}.sl-markdown-content .sl-link-button:where(.astro-lyj5jyyz){margin-inline-end:1rem}.sl-markdown-content .sl-link-button:where(.astro-lyj5jyyz):not(:where(p *)){margin-block:1rem}}
+</style><script type="module" src="/docs/_astro/page.7qqag-5g.js"></script></head> <body class="astro-cyznwi7u"> <a href="#_top" class="astro-kwazxam7">Skip to content</a>  <div class="page sl-flex astro-4zhhqy3w"> <header class="header astro-4zhhqy3w"><div class="header sl-flex astro-kbj3q3ai"> <div class="title-wrapper sl-flex astro-kbj3q3ai"> <a href="/docs/" class="site-title sl-flex astro-idrpryed">  <img class="light:sl-hidden print:hidden astro-idrpryed" alt src="/docs/_astro/logo-dark.DOStV66V.svg" width="234" height="42"> <img class="dark:sl-hidden print:block astro-idrpryed" alt src="/docs/_astro/logo-light.B0yzR0O5.svg" width="234" height="42"> <span class="sr-only astro-idrpryed" translate="no"> OpenCode </span> </a>  </div> <div class="middle-group sl-flex astro-kbj3q3ai"> <a class="links astro-335qcnz2" href="/">app.header.home</a><a class="links astro-335qcnz2" href="/docs/">app.header.docs</a> </div> <div class="sl-hidden md:sl-flex right-group astro-kbj3q3ai"> <div class="sl-flex social-icons astro-kbj3q3ai"> <a href="https://github.com/anomalyco/opencode" rel="me" target="_blank" class="astro-kbj3q3ai"> <svg aria-hidden="true" class="astro-kbj3q3ai astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1rem;"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.08 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3Z"/></svg> </a><a href="https://opencode.ai/discord" rel="me" target="_blank" class="astro-kbj3q3ai"> <svg aria-hidden="true" class="astro-kbj3q3ai astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1rem;"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.93-1.51 13.78 13.78 0 0 0-.64 1.28 18.27 18.27 0 0 0-5.5 0 12.64 12.64 0 0 0-.64-1.28h-.05A19.74 19.74 0 0 0 3.64 4.4 20.26 20.26 0 0 0 .11 18.09l.02.02a19.9 19.9 0 0 0 6.04 3.03l.04-.02a14.24 14.24 0 0 0 1.23-2.03.08.08 0 0 0-.05-.07 13.1 13.1 0 0 1-1.9-.92.08.08 0 0 1 .02-.1 10.2 10.2 0 0 0 .41-.31h.04a14.2 14.2 0 0 0 12.1 0l.04.01a9.63 9.63 0 0 0 .4.32.08.08 0 0 1-.03.1 12.29 12.29 0 0 1-1.9.91.08.08 0 0 0-.02.1 15.97 15.97 0 0 0 1.27 2.01h.04a19.84 19.84 0 0 0 6.03-3.05v-.03a20.12 20.12 0 0 0-3.57-13.69ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.08-2.15-2.42 0-1.33.95-2.42 2.15-2.42 1.22 0 2.18 1.1 2.16 2.42 0 1.34-.94 2.42-2.16 2.42Z"/></svg> </a> </div> <site-search class="astro-kbj3q3ai astro-dtr5i3qi" data-translations="{&#34;placeholder&#34;:&#34;Search&#34;}"> <button data-open-modal disabled aria-label="Search" aria-keyshortcuts="Control+K" class="astro-dtr5i3qi"> <svg aria-hidden="true" class="astro-dtr5i3qi astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.71 20.29 18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z"/></svg> <span class="sl-hidden md:sl-block astro-dtr5i3qi" aria-hidden="true">Search</span> <kbd class="sl-hidden md:sl-flex astro-dtr5i3qi" style="display: none;"> <kbd class="astro-dtr5i3qi">Ctrl</kbd><kbd class="astro-dtr5i3qi">K</kbd> </kbd> </button> <dialog style="padding:0" aria-label="Search" class="astro-dtr5i3qi"> <div class="dialog-frame sl-flex astro-dtr5i3qi">  <button data-close-modal class="sl-flex md:sl-hidden astro-dtr5i3qi"> Cancel </button> <div class="search-container astro-dtr5i3qi"> <div id="starlight__search" class="astro-dtr5i3qi"></div> </div> </div> </dialog> </site-search>  <script>
+	(() => {
+		const openBtn = document.querySelector('button[data-open-modal]');
+		const shortcut = openBtn?.querySelector('kbd');
+		if (!openBtn || !(shortcut instanceof HTMLElement)) return;
+		const platformKey = shortcut.querySelector('kbd');
+		if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+			platformKey.textContent = '⌘';
+			openBtn.setAttribute('aria-keyshortcuts', 'Meta+K');
+		}
+		shortcut.style.display = '';
+	})();
+</script> <script type="module" src="/docs/_astro/Search.astro_astro_type_script_index_0_lang.ol3yM__Y.js"></script>   </div> </div> </header> <nav class="sidebar print:hidden astro-4zhhqy3w" aria-label="Main"> <starlight-menu-button class="print:hidden astro-zkf5lrrp"> <button aria-expanded="false" aria-label="Menu" aria-controls="starlight__sidebar" class="sl-flex md:sl-hidden astro-zkf5lrrp"> <svg aria-hidden="true" class="open-menu astro-zkf5lrrp astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M3 8h18a1 1 0 1 0 0-2H3a1 1 0 0 0 0 2Zm18 8H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Zm0-5H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Z"/></svg> <svg aria-hidden="true" class="close-menu astro-zkf5lrrp astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="m13.41 12 6.3-6.29a1.004 1.004 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1.004 1.004 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 0 1.42.998.998 0 0 0 1.42 0l6.29-6.3 6.29 6.3a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.42L13.41 12Z"/></svg> </button> </starlight-menu-button> <script type="module">class s extends HTMLElement{constructor(){super(),this.btn=this.querySelector("button"),this.btn.addEventListener("click",()=>this.toggleExpanded());const t=this.closest("nav");t&&t.addEventListener("keyup",e=>this.closeOnEscape(e))}setExpanded(t){this.setAttribute("aria-expanded",String(t)),document.body.toggleAttribute("data-mobile-menu-expanded",t)}toggleExpanded(){this.setExpanded(this.getAttribute("aria-expanded")!=="true")}closeOnEscape(t){t.code==="Escape"&&(this.setExpanded(!1),this.btn.focus())}}customElements.define("starlight-menu-button",s);</script>   <div id="starlight__sidebar" class="sidebar-pane astro-4zhhqy3w"> <div class="sidebar-content sl-flex astro-4zhhqy3w"> <sl-sidebar-state-persist data-hash="003f4hv" class="astro-xosx2ya6"> <script aria-hidden="true">
+		(() => {
+			try {
+				if (!matchMedia('(min-width: 50em)').matches) return;
+				/** @type {HTMLElement | null} */
+				const target = document.querySelector('sl-sidebar-state-persist');
+				const state = JSON.parse(sessionStorage.getItem('sl-sidebar-state') || '0');
+				if (!target || !state || target.dataset.hash !== state.hash) return;
+				window._starlightScrollRestore = state.scroll;
+				customElements.define(
+					'sl-sidebar-restore',
+					class SidebarRestore extends HTMLElement {
+						connectedCallback() {
+							try {
+								const idx = parseInt(this.dataset.index || '');
+								const details = this.closest('details');
+								if (details && typeof state.open[idx] === 'boolean') details.open = state.open[idx];
+							} catch {}
+						}
+					}
+				);
+			} catch {}
+		})();
+	</script>  <ul class="top-level astro-5jtapoqz"> <li class="astro-5jtapoqz"> <a href="/docs/" aria-current="false" class="large astro-5jtapoqz"> <span class="astro-5jtapoqz">Intro</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/config/" aria-current="false" class="large astro-5jtapoqz"> <span class="astro-5jtapoqz">Config</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/providers/" aria-current="false" class="large astro-5jtapoqz"> <span class="astro-5jtapoqz">Providers</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/network/" aria-current="false" class="large astro-5jtapoqz"> <span class="astro-5jtapoqz">Network</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/enterprise/" aria-current="false" class="large astro-5jtapoqz"> <span class="astro-5jtapoqz">Enterprise</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/troubleshooting/" aria-current="false" class="large astro-5jtapoqz"> <span class="astro-5jtapoqz">Troubleshooting</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/windows-wsl" aria-current="false" class="large astro-5jtapoqz"> <span class="astro-5jtapoqz">Windows</span>  </a> </li><li class="astro-5jtapoqz"> <details open class="astro-5jtapoqz"> <sl-sidebar-restore data-index="0"></sl-sidebar-restore> <summary class="astro-5jtapoqz"> <div class="group-label astro-5jtapoqz"> <span class="large astro-5jtapoqz">Usage</span>  </div> <svg aria-hidden="true" class="caret astro-5jtapoqz astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <ul class="astro-5jtapoqz"> <li class="astro-5jtapoqz"> <a href="/docs/go/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Go</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/tui/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">TUI</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/cli/" aria-current="page" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">CLI</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/web/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Web</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/ide/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">IDE</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/zen/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Zen</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/share/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Share</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/github/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">GitHub</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/gitlab/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">GitLab</span>  </a> </li> </ul>  </details> </li><li class="astro-5jtapoqz"> <details open class="astro-5jtapoqz"> <sl-sidebar-restore data-index="1"></sl-sidebar-restore> <summary class="astro-5jtapoqz"> <div class="group-label astro-5jtapoqz"> <span class="large astro-5jtapoqz">Configure</span>  </div> <svg aria-hidden="true" class="caret astro-5jtapoqz astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <ul class="astro-5jtapoqz"> <li class="astro-5jtapoqz"> <a href="/docs/tools/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Tools</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/rules/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Rules</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/agents/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Agents</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/models/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Models</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/themes/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Themes</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/keybinds/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Keybinds</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/commands/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Commands</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/formatters/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Formatters</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/permissions/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Permissions</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/policies/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Policies</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/lsp/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">LSP Servers</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/mcp-servers/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">MCP servers</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/acp/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">ACP Support</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/skills/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Agent Skills</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/references/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">References</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/custom-tools/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Custom Tools</span>  </a> </li> </ul>  </details> </li><li class="astro-5jtapoqz"> <details open class="astro-5jtapoqz"> <sl-sidebar-restore data-index="2"></sl-sidebar-restore> <summary class="astro-5jtapoqz"> <div class="group-label astro-5jtapoqz"> <span class="large astro-5jtapoqz">Develop</span>  </div> <svg aria-hidden="true" class="caret astro-5jtapoqz astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <ul class="astro-5jtapoqz"> <li class="astro-5jtapoqz"> <a href="/docs/sdk/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">SDK</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/server/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Server</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/plugins/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Plugins</span>  </a> </li><li class="astro-5jtapoqz"> <a href="/docs/ecosystem/" aria-current="false" class="astro-5jtapoqz"> <span class="astro-5jtapoqz">Ecosystem</span>  </a> </li> </ul>  </details> </li> </ul>   <script aria-hidden="true">
+		(() => {
+			const scroller = document.getElementById('starlight__sidebar');
+			if (!window._starlightScrollRestore || !scroller) return;
+			scroller.scrollTop = window._starlightScrollRestore;
+			delete window._starlightScrollRestore;
+		})();
+	</script> </sl-sidebar-state-persist>  <div class="md:sl-hidden"> <div class="mobile-preferences sl-flex astro-qt2cnizl"> <div class="social-icons astro-qt2cnizl"> <a href="https://github.com/anomalyco/opencode" rel="me" class="sl-flex astro-z45qobm2"><span class="sr-only astro-z45qobm2">GitHub</span><svg aria-hidden="true" class="astro-z45qobm2 astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.08 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3Z"/></svg></a><a href="https://opencode.ai/discord" rel="me" class="sl-flex astro-z45qobm2"><span class="sr-only astro-z45qobm2">Discord</span><svg aria-hidden="true" class="astro-z45qobm2 astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.93-1.51 13.78 13.78 0 0 0-.64 1.28 18.27 18.27 0 0 0-5.5 0 12.64 12.64 0 0 0-.64-1.28h-.05A19.74 19.74 0 0 0 3.64 4.4 20.26 20.26 0 0 0 .11 18.09l.02.02a19.9 19.9 0 0 0 6.04 3.03l.04-.02a14.24 14.24 0 0 0 1.23-2.03.08.08 0 0 0-.05-.07 13.1 13.1 0 0 1-1.9-.92.08.08 0 0 1 .02-.1 10.2 10.2 0 0 0 .41-.31h.04a14.2 14.2 0 0 0 12.1 0l.04.01a9.63 9.63 0 0 0 .4.32.08.08 0 0 1-.03.1 12.29 12.29 0 0 1-1.9.91.08.08 0 0 0-.02.1 15.97 15.97 0 0 0 1.27 2.01h.04a19.84 19.84 0 0 0 6.03-3.05v-.03a20.12 20.12 0 0 0-3.57-13.69ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.08-2.15-2.42 0-1.33.95-2.42 2.15-2.42 1.22 0 2.18 1.1 2.16 2.42 0 1.34-.94 2.42-2.16 2.42Z"/></svg></a> </div> <starlight-theme-select>  <label style="--sl-select-width: 6.25em" class="astro-kesctxeq"> <span class="sr-only astro-kesctxeq">Select theme</span> <svg aria-hidden="true" class="icon label-icon astro-kesctxeq astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg> <select value="auto" autocomplete="off" class="astro-kesctxeq"> <option value="dark" class="astro-kesctxeq">Dark</option><option value="light" class="astro-kesctxeq">Light</option><option value="auto" selected class="astro-kesctxeq">Auto</option> </select> <svg aria-hidden="true" class="icon caret astro-kesctxeq astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg> </label>  </starlight-theme-select>  <script>
+	StarlightThemeProvider.updatePickers();
+</script> <script type="module">const r="starlight-theme",o=e=>e==="auto"||e==="dark"||e==="light"?e:"auto",c=()=>o(typeof localStorage<"u"&&localStorage.getItem(r));function n(e){typeof localStorage<"u"&&localStorage.setItem(r,e==="light"||e==="dark"?e:"")}const l=()=>matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";function t(e){StarlightThemeProvider.updatePickers(e),document.documentElement.dataset.theme=e==="auto"?l():e,n(e)}matchMedia("(prefers-color-scheme: light)").addEventListener("change",()=>{c()==="auto"&&t("auto")});class s extends HTMLElement{constructor(){super(),t(c()),this.querySelector("select")?.addEventListener("change",a=>{a.currentTarget instanceof HTMLSelectElement&&t(o(a.currentTarget.value))})}}customElements.define("starlight-theme-select",s);</script> <opencode-language-select data-locales="[&#34;root&#34;,&#34;ar&#34;,&#34;bs&#34;,&#34;da&#34;,&#34;de&#34;,&#34;es&#34;,&#34;fr&#34;,&#34;it&#34;,&#34;ja&#34;,&#34;ko&#34;,&#34;nb&#34;,&#34;pl&#34;,&#34;pt-br&#34;,&#34;ru&#34;,&#34;th&#34;,&#34;tr&#34;,&#34;zh-cn&#34;,&#34;zh-tw&#34;]" class="astro-ztav45zs"> <starlight-lang-select><label style="--sl-select-width: 7em" class="astro-kesctxeq"> <span class="sr-only astro-kesctxeq">Select language</span> <svg aria-hidden="true" class="icon label-icon astro-kesctxeq astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path fill-rule="evenodd" d="M8.516 3a.94.94 0 0 0-.941.94v1.15H2.94a.94.94 0 1 0 0 1.882h7.362a7.422 7.422 0 0 1-1.787 3.958 7.42 7.42 0 0 1-1.422-2.425.94.94 0 1 0-1.774.627 9.303 9.303 0 0 0 1.785 3.043 7.422 7.422 0 0 1-4.164 1.278.94.94 0 1 0 0 1.881 9.303 9.303 0 0 0 5.575-1.855 9.303 9.303 0 0 0 4.11 1.74l-.763 1.525a.968.968 0 0 0-.016.034l-1.385 2.77a.94.94 0 1 0 1.683.841l1.133-2.267h5.806l1.134 2.267a.94.94 0 0 0 1.683-.841l-1.385-2.769a.95.95 0 0 0-.018-.036l-3.476-6.951a.94.94 0 0 0-1.682 0l-1.82 3.639a7.423 7.423 0 0 1-3.593-1.256 9.303 9.303 0 0 0 2.27-5.203h1.894a.94.94 0 0 0 0-1.881H9.456V3.94A.94.94 0 0 0 8.516 3Zm6.426 11.794a1.068 1.068 0 0 1-.02.039l-.703 1.407h3.924l-1.962-3.924-1.24 2.478Z" clip-rule="evenodd"/></svg> <select value="/docs/cli/" autocomplete="off" class="astro-kesctxeq"> <option value="/docs/cli/" class="astro-kesctxeq">English</option><option value="/docs/ar/cli/" class="astro-kesctxeq">العربية</option><option value="/docs/bs/cli/" class="astro-kesctxeq">Bosanski</option><option value="/docs/da/cli/" class="astro-kesctxeq">Dansk</option><option value="/docs/de/cli/" class="astro-kesctxeq">Deutsch</option><option value="/docs/es/cli/" class="astro-kesctxeq">Español</option><option value="/docs/fr/cli/" class="astro-kesctxeq">Français</option><option value="/docs/it/cli/" class="astro-kesctxeq">Italiano</option><option value="/docs/ja/cli/" class="astro-kesctxeq">日本語</option><option value="/docs/ko/cli/" class="astro-kesctxeq">한국어</option><option value="/docs/nb/cli/" class="astro-kesctxeq">Norsk Bokmål</option><option value="/docs/pl/cli/" class="astro-kesctxeq">Polski</option><option value="/docs/pt-br/cli/" class="astro-kesctxeq">Português (Brasil)</option><option value="/docs/ru/cli/" class="astro-kesctxeq">Русский</option><option value="/docs/th/cli/" class="astro-kesctxeq">ไทย</option><option value="/docs/tr/cli/" class="astro-kesctxeq">Türkçe</option><option value="/docs/zh-cn/cli/" class="astro-kesctxeq">简体中文</option><option value="/docs/zh-tw/cli/" class="astro-kesctxeq">繁體中文</option> </select> <svg aria-hidden="true" class="icon caret astro-kesctxeq astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg> </label> </starlight-lang-select> </opencode-language-select>   </div>  </div> </div> </div> </nav> <div class="main-frame astro-4zhhqy3w">  <script type="module">const a=document.getElementById("starlight__sidebar"),n=a?.querySelector("sl-sidebar-state-persist"),o="sl-sidebar-state",i=()=>{let t=[];const e=n?.dataset.hash||"";try{const s=sessionStorage.getItem(o),r=JSON.parse(s||"{}");Array.isArray(r.open)&&r.hash===e&&(t=r.open)}catch{}return{hash:e,open:t,scroll:a?.scrollTop||0}},c=t=>{try{sessionStorage.setItem(o,JSON.stringify(t))}catch{}},d=()=>c(i()),l=(t,e)=>{const s=i();s.open[e]=t,c(s)};n?.addEventListener("click",t=>{if(!(t.target instanceof Element))return;const e=t.target.closest("summary")?.closest("details");if(!e)return;const s=e.querySelector("sl-sidebar-restore"),r=parseInt(s?.dataset.index||"");isNaN(r)||l(!e.open,r)});addEventListener("visibilitychange",()=>{document.visibilityState==="hidden"&&d()});addEventListener("pageHide",d);</script> <div class="lg:sl-flex astro-b5byl3y2"> <aside class="right-sidebar-container print:hidden astro-b5byl3y2"> <div class="right-sidebar astro-b5byl3y2"> <div class="lg:sl-hidden astro-bason5k2"><mobile-starlight-toc data-min-h="2" data-max-h="3" class="astro-3lv22oka"><nav aria-labelledby="starlight__on-this-page--mobile" class="astro-3lv22oka"><details id="starlight__mobile-toc" class="astro-3lv22oka"><summary id="starlight__on-this-page--mobile" class="sl-flex astro-3lv22oka"><div class="toggle sl-flex astro-3lv22oka">On this page<svg aria-hidden="true" class="caret astro-3lv22oka astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></div><span class="display-current astro-3lv22oka"></span></summary><div class="dropdown astro-3lv22oka"><ul class="isMobile astro-ms3cyn4b" style="--depth: 0;"> <li class="astro-ms3cyn4b" style="--depth: 0;"> <a href="#_top" class="astro-ms3cyn4b" style="--depth: 0;"> <span class="astro-ms3cyn4b" style="--depth: 0;">Overview</span> </a> <ul class="isMobile astro-ms3cyn4b" style="--depth: 1;"> <li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#tui" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">tui</span> </a>  </li> </ul>  </li><li class="astro-ms3cyn4b" style="--depth: 0;"> <a href="#commands" class="astro-ms3cyn4b" style="--depth: 0;"> <span class="astro-ms3cyn4b" style="--depth: 0;">Commands</span> </a> <ul class="isMobile astro-ms3cyn4b" style="--depth: 1;"> <li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#agent" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">agent</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#attach" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">attach</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#auth" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">auth</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#github" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">github</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#mcp" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">mcp</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#models" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">models</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#run-1" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">run</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#serve" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">serve</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#session" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">session</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#stats" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">stats</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#export" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">export</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#import" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">import</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#web" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">web</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#acp" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">acp</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#plugin" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">plugin</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#pr" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">pr</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#db" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">db</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#debug-1" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">debug</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#uninstall" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">uninstall</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#upgrade" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">upgrade</span> </a>  </li> </ul>  </li><li class="astro-ms3cyn4b" style="--depth: 0;"> <a href="#global-flags" class="astro-ms3cyn4b" style="--depth: 0;"> <span class="astro-ms3cyn4b" style="--depth: 0;">Global Flags</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 0;"> <a href="#environment-variables" class="astro-ms3cyn4b" style="--depth: 0;"> <span class="astro-ms3cyn4b" style="--depth: 0;">Environment variables</span> </a> <ul class="isMobile astro-ms3cyn4b" style="--depth: 1;"> <li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#experimental" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">Experimental</span> </a>  </li> </ul>  </li> </ul> </div></details></nav></mobile-starlight-toc><script type="module" src="/docs/_astro/MobileTableOfContents.astro_astro_type_script_index_0_lang.C181hMzK.js"></script></div><div class="right-sidebar-panel sl-hidden lg:sl-block astro-bason5k2"><div class="sl-container astro-bason5k2"><starlight-toc data-min-h="2" data-max-h="3"><nav aria-labelledby="starlight__on-this-page"><h2 id="starlight__on-this-page">On this page</h2><ul class="astro-ms3cyn4b" style="--depth: 0;"> <li class="astro-ms3cyn4b" style="--depth: 0;"> <a href="#_top" class="astro-ms3cyn4b" style="--depth: 0;"> <span class="astro-ms3cyn4b" style="--depth: 0;">Overview</span> </a> <ul class="astro-ms3cyn4b" style="--depth: 1;"> <li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#tui" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">tui</span> </a>  </li> </ul>  </li><li class="astro-ms3cyn4b" style="--depth: 0;"> <a href="#commands" class="astro-ms3cyn4b" style="--depth: 0;"> <span class="astro-ms3cyn4b" style="--depth: 0;">Commands</span> </a> <ul class="astro-ms3cyn4b" style="--depth: 1;"> <li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#agent" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">agent</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#attach" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">attach</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#auth" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">auth</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#github" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">github</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#mcp" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">mcp</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#models" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">models</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#run-1" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">run</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#serve" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">serve</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#session" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">session</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#stats" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">stats</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#export" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">export</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#import" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">import</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#web" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">web</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#acp" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">acp</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#plugin" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">plugin</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#pr" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">pr</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#db" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">db</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#debug-1" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">debug</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#uninstall" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">uninstall</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#upgrade" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">upgrade</span> </a>  </li> </ul>  </li><li class="astro-ms3cyn4b" style="--depth: 0;"> <a href="#global-flags" class="astro-ms3cyn4b" style="--depth: 0;"> <span class="astro-ms3cyn4b" style="--depth: 0;">Global Flags</span> </a>  </li><li class="astro-ms3cyn4b" style="--depth: 0;"> <a href="#environment-variables" class="astro-ms3cyn4b" style="--depth: 0;"> <span class="astro-ms3cyn4b" style="--depth: 0;">Environment variables</span> </a> <ul class="astro-ms3cyn4b" style="--depth: 1;"> <li class="astro-ms3cyn4b" style="--depth: 1;"> <a href="#experimental" class="astro-ms3cyn4b" style="--depth: 1;"> <span class="astro-ms3cyn4b" style="--depth: 1;">Experimental</span> </a>  </li> </ul>  </li> </ul> </nav></starlight-toc><script type="module" src="/docs/_astro/TableOfContents.astro_astro_type_script_index_0_lang.CKWWgpjV.js"></script></div></div> </div> </aside> <div class="main-pane astro-b5byl3y2">  <main data-pagefind-body class="astro-cyznwi7u" lang="en" dir="ltr">    <div class="content-panel astro-fob52mol"> <div class="sl-container astro-fob52mol"> <h1 id="_top" class="astro-f4rnnppd">CLI</h1><p class="page-description astro-f4rnnppd">OpenCode CLI options and commands.</p> </div> </div>  <div class="content-panel astro-fob52mol"> <div class="sl-container astro-fob52mol"> <div class="sl-markdown-content"> <p>The OpenCode CLI by default starts the <a href="/docs/tui">TUI</a> when run without any arguments.</p>
+<div class="expressive-code"><link rel="stylesheet" href="/docs/_astro/ec.4c0k7.css"><script type="module" src="/docs/_astro/ec.0vx5m.js"></script><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode"><div></div></button></div></figure></div>
+<p>But it also accepts commands as documented on this page. This allows you to interact with OpenCode programmatically.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">run</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">"Explain how closures work in JavaScript"</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode run &#x22;Explain how closures work in JavaScript&#x22;"><div></div></button></div></figure></div>
+<hr>
+<h3 id="tui"><a href="#tui">tui</a></h3>
+<p>Start the OpenCode terminal user interface.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> [project]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode [project]"><div></div></button></div></figure></div>
+<h4 id="flags"><a href="#flags">Flags</a></h4>
 
-opencode auth login
 
-The auth command manages credentials and authentication for different providers.
 
-List all authenticated providers stored in the credentials file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Short</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--continue</code></nobr></td><td><code dir="auto">-c</code></td><td>Continue the last session</td></tr><tr><td><nobr><code>--session</code></nobr></td><td><code dir="auto">-s</code></td><td>Session ID to continue</td></tr><tr><td><nobr><code>--fork</code></nobr></td><td></td><td>Fork the session when continuing (use with <code dir="auto">--continue</code> or <code dir="auto">--session</code>)</td></tr><tr><td><nobr><code>--prompt</code></nobr></td><td></td><td>Prompt to use</td></tr><tr><td><nobr><code>--model</code></nobr></td><td><code dir="auto">-m</code></td><td>Model to use in the form of provider/model</td></tr><tr><td><nobr><code>--agent</code></nobr></td><td></td><td>Agent to use</td></tr><tr><td><nobr><code>--auto</code></nobr></td><td></td><td>Auto-approve permissions that are not explicitly denied</td></tr><tr><td><nobr><code>--port</code></nobr></td><td></td><td>Port to listen on</td></tr><tr><td><nobr><code>--hostname</code></nobr></td><td></td><td>Hostname to listen on</td></tr><tr><td><nobr><code>--mdns</code></nobr></td><td></td><td>Enable mDNS discovery</td></tr><tr><td><nobr><code>--mdns-domain</code></nobr></td><td></td><td>Custom mDNS domain name</td></tr><tr><td><nobr><code>--cors</code></nobr></td><td></td><td>Additional browser origin(s) to allow CORS</td></tr></tbody></table>
+<hr>
+<h2 id="commands"><a href="#commands">Commands</a></h2>
+<p>The OpenCode CLI also has the following commands.</p>
+<hr>
+<h3 id="agent"><a href="#agent">agent</a></h3>
+<p>Manage agents for OpenCode.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">agent</span><span style="--0:#24292E;--1:#E1E4E8"> [command]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode agent [command]"><div></div></button></div></figure></div>
+<hr>
+<h4 id="create"><a href="#create">create</a></h4>
+<p>Create a new agent with custom configuration.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">agent</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">create</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode agent create"><div></div></button></div></figure></div>
+<p>This command will guide you through creating a new agent with a custom system prompt and permission configuration. Anything you don’t allow is denied in the generated agent’s frontmatter.</p>
+<h4 id="flags-1"><a href="#flags-1">Flags</a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Short</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--path</code></nobr></td><td></td><td>Directory to write the agent file to (defaults to global or <code dir="auto">.opencode/agent</code> based on the prompt)</td></tr><tr><td><nobr><code>--description</code></nobr></td><td></td><td>What the agent should do</td></tr><tr><td><nobr><code>--mode</code></nobr></td><td></td><td>Agent mode: <code dir="auto">all</code>, <code dir="auto">primary</code>, or <code dir="auto">subagent</code></td></tr><tr><td><nobr><code>--permissions</code></nobr></td><td></td><td>Comma-separated list of permissions to allow (default: all). Available: <code dir="auto">bash</code>, <code dir="auto">read</code>, <code dir="auto">edit</code>, <code dir="auto">glob</code>, <code dir="auto">grep</code>, <code dir="auto">webfetch</code>, <code dir="auto">task</code>, <code dir="auto">todowrite</code>, <code dir="auto">websearch</code>, <code dir="auto">lsp</code>, <code dir="auto">skill</code>. Anything omitted is denied. Alias: <code dir="auto">--tools</code></td></tr><tr><td><nobr><code>--model</code></nobr></td><td><code dir="auto">-m</code></td><td>Model to use, in <code dir="auto">provider/model</code> format</td></tr></tbody></table>
+<p>Passing all of <code dir="auto">--path</code>, <code dir="auto">--description</code>, <code dir="auto">--mode</code>, and <code dir="auto">--permissions</code> runs the command non-interactively.</p>
+<hr>
+<h4 id="list"><a href="#list">list</a></h4>
+<p>List all available agents.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">agent</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">list</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode agent list"><div></div></button></div></figure></div>
+<hr>
+<h3 id="attach"><a href="#attach">attach</a></h3>
+<p>Attach a terminal to an already running OpenCode backend server started via <code dir="auto">serve</code> or <code dir="auto">web</code> commands.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">attach</span><span style="--0:#24292E;--1:#E1E4E8"> [url]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode attach [url]"><div></div></button></div></figure></div>
+<p>This allows using the TUI with a remote OpenCode backend. For example:</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#616972;--1:#99A0A6"># Start the backend server for web/mobile access</span></div></div><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">web</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#005CC5;--1:#79B8FF">--port</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#005CC5;--1:#79B8FF">4096</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#005CC5;--1:#79B8FF">--hostname</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#005CC5;--1:#79B8FF">0.0.0.0</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#616972;--1:#99A0A6"># In another terminal, attach the TUI to the running backend</span></div></div><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">attach</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">http://10.20.30.40:4096</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode web --port 4096 --hostname 0.0.0.0opencode attach http://10.20.30.40:4096"><div></div></button></div></figure></div>
+<h4 id="flags-2"><a href="#flags-2">Flags</a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Short</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--dir</code></nobr></td><td></td><td>Working directory to start TUI in</td></tr><tr><td><nobr><code>--continue</code></nobr></td><td><code dir="auto">-c</code></td><td>Continue the last session</td></tr><tr><td><nobr><code>--session</code></nobr></td><td><code dir="auto">-s</code></td><td>Session ID to continue</td></tr><tr><td><nobr><code>--fork</code></nobr></td><td></td><td>Fork the session when continuing (use with <code dir="auto">--continue</code> or <code dir="auto">--session</code>)</td></tr><tr><td><nobr><code>--password</code></nobr></td><td><code dir="auto">-p</code></td><td>Basic auth password (defaults to <code dir="auto">OPENCODE_SERVER_PASSWORD</code>)</td></tr><tr><td><nobr><code>--username</code></nobr></td><td><code dir="auto">-u</code></td><td>Basic auth username (defaults to <code dir="auto">OPENCODE_SERVER_USERNAME</code> or <code dir="auto">opencode</code>)</td></tr></tbody></table>
+<hr>
+<h3 id="auth"><a href="#auth">auth</a></h3>
+<p>Command to manage credentials and login for providers.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">auth</span><span style="--0:#24292E;--1:#E1E4E8"> [command]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode auth [command]"><div></div></button></div></figure></div>
+<hr>
+<h4 id="login"><a href="#login">login</a></h4>
+<p>OpenCode is powered by the provider list at <a href="https://models.dev">Models.dev</a>, so you can use <code dir="auto">opencode auth login</code> to configure API keys for any provider you’d like to use. This is stored in <code dir="auto">~/.local/share/opencode/auth.json</code>.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">auth</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">login</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode auth login"><div></div></button></div></figure></div>
+<p>When OpenCode starts up it loads the providers from the credentials file. And if there are any keys defined in your environments or a <code dir="auto">.env</code> file in your project.</p>
+<h5 id="flags-3"><a href="#flags-3">Flags</a></h5>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Short</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--provider</code></nobr></td><td><code dir="auto">-p</code></td><td>Provider ID or name to log in to</td></tr><tr><td><nobr><code>--method</code></nobr></td><td><code dir="auto">-m</code></td><td>Login method label to use, skipping method selection</td></tr></tbody></table>
+<hr>
+<h4 id="list-1"><a href="#list-1">list</a></h4>
+<p>Lists all the authenticated providers as stored in the credentials file.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">auth</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">list</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode auth list"><div></div></button></div></figure></div>
+<p>Or the short version.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">auth</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">ls</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode auth ls"><div></div></button></div></figure></div>
+<hr>
+<h4 id="logout"><a href="#logout">logout</a></h4>
+<p>Logs you out of a provider by clearing it from the credentials file.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">auth</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">logout</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode auth logout"><div></div></button></div></figure></div>
+<hr>
+<h3 id="github"><a href="#github">github</a></h3>
+<p>Manage the GitHub agent for repository automation.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">github</span><span style="--0:#24292E;--1:#E1E4E8"> [command]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode github [command]"><div></div></button></div></figure></div>
+<hr>
+<h4 id="install"><a href="#install">install</a></h4>
+<p>Install the GitHub agent in your repository.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">github</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">install</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode github install"><div></div></button></div></figure></div>
+<p>This sets up the necessary GitHub Actions workflow and guides you through the configuration process. <a href="/docs/github">Learn more</a>.</p>
+<hr>
+<h4 id="run"><a href="#run">run</a></h4>
+<p>Run the GitHub agent. This is typically used in GitHub Actions.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">github</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">run</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode github run"><div></div></button></div></figure></div>
+<h5 id="flags-4"><a href="#flags-4">Flags</a></h5>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--event</code></nobr></td><td>GitHub mock event to run the agent for</td></tr><tr><td><nobr><code>--token</code></nobr></td><td>GitHub personal access token</td></tr></tbody></table>
+<hr>
+<h3 id="mcp"><a href="#mcp">mcp</a></h3>
+<p>Manage Model Context Protocol servers.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">mcp</span><span style="--0:#24292E;--1:#E1E4E8"> [command]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode mcp [command]"><div></div></button></div></figure></div>
+<hr>
+<h4 id="add"><a href="#add">add</a></h4>
+<p>Add an MCP server to your configuration.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">mcp</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">add</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode mcp add"><div></div></button></div></figure></div>
+<p>This command will guide you through adding either a local or remote MCP server.</p>
+<hr>
+<h4 id="list-2"><a href="#list-2">list</a></h4>
+<p>List all configured MCP servers and their connection status.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">mcp</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">list</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode mcp list"><div></div></button></div></figure></div>
+<p>Or use the short version.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">mcp</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">ls</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode mcp ls"><div></div></button></div></figure></div>
+<hr>
+<h4 id="auth-1"><a href="#auth-1">auth</a></h4>
+<p>Authenticate with an OAuth-enabled MCP server.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">mcp</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">auth</span><span style="--0:#24292E;--1:#E1E4E8"> [name]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode mcp auth [name]"><div></div></button></div></figure></div>
+<p>If you don’t provide a server name, you’ll be prompted to select from available OAuth-capable servers.</p>
+<p>You can also list OAuth-capable servers and their authentication status.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">mcp</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">auth</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">list</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode mcp auth list"><div></div></button></div></figure></div>
+<p>Or use the short version.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">mcp</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">auth</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">ls</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode mcp auth ls"><div></div></button></div></figure></div>
+<hr>
+<h4 id="logout-1"><a href="#logout-1">logout</a></h4>
+<p>Remove OAuth credentials for an MCP server.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">mcp</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">logout</span><span style="--0:#24292E;--1:#E1E4E8"> [name]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode mcp logout [name]"><div></div></button></div></figure></div>
+<hr>
+<h4 id="debug"><a href="#debug">debug</a></h4>
+<p>Debug OAuth connection issues for an MCP server.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">mcp</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">debug</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">&#x3C;name></span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode mcp debug <name>"><div></div></button></div></figure></div>
+<hr>
+<h3 id="models"><a href="#models">models</a></h3>
+<p>List all available models from configured providers.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">models</span><span style="--0:#24292E;--1:#E1E4E8"> [provider]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode models [provider]"><div></div></button></div></figure></div>
+<p>This command displays all models available across your configured providers in the format <code dir="auto">provider/model</code>.</p>
+<p>This is useful for figuring out the exact model name to use in <a href="/docs/config/">your config</a>.</p>
+<p>You can optionally pass a provider ID to filter models by that provider.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">models</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">anthropic</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode models anthropic"><div></div></button></div></figure></div>
+<h4 id="flags-5"><a href="#flags-5">Flags</a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--refresh</code></nobr></td><td>Refresh the models cache from models.dev</td></tr><tr><td><nobr><code>--verbose</code></nobr></td><td>Use more verbose model output (includes metadata like costs)</td></tr></tbody></table>
+<p>Use the <code dir="auto">--refresh</code> flag to update the cached model list. This is useful when new models have been added to a provider and you want to see them in OpenCode.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">models</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#005CC5;--1:#79B8FF">--refresh</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode models --refresh"><div></div></button></div></figure></div>
+<hr>
+<h3 id="run-1"><a href="#run-1">run</a></h3>
+<p>Run opencode in non-interactive mode by passing a prompt directly.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">run</span><span style="--0:#24292E;--1:#E1E4E8"> [message..]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode run [message..]"><div></div></button></div></figure></div>
+<p>This is useful for scripting, automation, or when you want a quick answer without launching the full TUI. For example.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><mark><span style="--0:#5c37a0;--1:#c5acf4">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">run</span></mark><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">Explain</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">the</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">use</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">of</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">context</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">in</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">Go</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode run Explain the use of context in Go"><div></div></button></div></figure></div>
+<p>You can also attach to a running <code dir="auto">opencode serve</code> instance to avoid MCP server cold boot times on every run:</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#616972;--1:#99A0A6"># Start a headless server in one terminal</span></div></div><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">serve</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#616972;--1:#99A0A6"># In another terminal, run commands that attach to it</span></div></div><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">run</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#005CC5;--1:#79B8FF">--attach</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">http://localhost:4096</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">"Explain async/await in JavaScript"</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode serveopencode run --attach http://localhost:4096 &#x22;Explain async/await in JavaScript&#x22;"><div></div></button></div></figure></div>
+<h4 id="flags-6"><a href="#flags-6">Flags</a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Short</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--command</code></nobr></td><td></td><td>The command to run, use message for args</td></tr><tr><td><nobr><code>--continue</code></nobr></td><td><code dir="auto">-c</code></td><td>Continue the last session</td></tr><tr><td><nobr><code>--session</code></nobr></td><td><code dir="auto">-s</code></td><td>Session ID to continue</td></tr><tr><td><nobr><code>--fork</code></nobr></td><td></td><td>Fork the session when continuing (use with <code dir="auto">--continue</code> or <code dir="auto">--session</code>)</td></tr><tr><td><nobr><code>--share</code></nobr></td><td></td><td>Share the session</td></tr><tr><td><nobr><code>--model</code></nobr></td><td><code dir="auto">-m</code></td><td>Model to use in the form of provider/model</td></tr><tr><td><nobr><code>--agent</code></nobr></td><td></td><td>Agent to use</td></tr><tr><td><nobr><code>--file</code></nobr></td><td><code dir="auto">-f</code></td><td>File(s) to attach to message</td></tr><tr><td><nobr><code>--format</code></nobr></td><td></td><td>Format: default (formatted) or json (raw JSON events)</td></tr><tr><td><nobr><code>--title</code></nobr></td><td></td><td>Title for the session (uses truncated prompt if no value provided)</td></tr><tr><td><nobr><code>--attach</code></nobr></td><td></td><td>Attach to a running opencode server (e.g., <a href="http://localhost:4096">http://localhost:4096</a>)</td></tr><tr><td><nobr><code>--password</code></nobr></td><td><code dir="auto">-p</code></td><td>Basic auth password (defaults to <code dir="auto">OPENCODE_SERVER_PASSWORD</code>)</td></tr><tr><td><nobr><code>--username</code></nobr></td><td><code dir="auto">-u</code></td><td>Basic auth username (defaults to <code dir="auto">OPENCODE_SERVER_USERNAME</code> or <code dir="auto">opencode</code>)</td></tr><tr><td><nobr><code>--dir</code></nobr></td><td></td><td>Directory to run in, or path on the remote server when attaching</td></tr><tr><td><nobr><code>--port</code></nobr></td><td></td><td>Port for the local server (defaults to random port)</td></tr><tr><td><nobr><code>--variant</code></nobr></td><td></td><td>Model variant (provider-specific reasoning effort)</td></tr><tr><td><nobr><code>--thinking</code></nobr></td><td></td><td>Show thinking blocks</td></tr><tr><td><nobr><code>--auto</code></nobr></td><td></td><td>Auto-approve permissions that are not explicitly denied</td></tr></tbody></table>
+<hr>
+<h3 id="serve"><a href="#serve">serve</a></h3>
+<p>Start a headless OpenCode server for API access. Check out the <a href="/docs/server">server docs</a> for the full HTTP interface.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">serve</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode serve"><div></div></button></div></figure></div>
+<p>This starts an HTTP server that provides API access to opencode functionality without the TUI interface. Set <code dir="auto">OPENCODE_SERVER_PASSWORD</code> to enable HTTP basic auth (username defaults to <code dir="auto">opencode</code>).</p>
+<h4 id="flags-7"><a href="#flags-7">Flags</a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--port</code></nobr></td><td>Port to listen on</td></tr><tr><td><nobr><code>--hostname</code></nobr></td><td>Hostname to listen on</td></tr><tr><td><nobr><code>--mdns</code></nobr></td><td>Enable mDNS discovery</td></tr><tr><td><nobr><code>--mdns-domain</code></nobr></td><td>Custom mDNS domain name</td></tr><tr><td><nobr><code>--cors</code></nobr></td><td>Additional browser origin(s) to allow CORS</td></tr></tbody></table>
+<hr>
+<h3 id="session"><a href="#session">session</a></h3>
+<p>Manage OpenCode sessions.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">session</span><span style="--0:#24292E;--1:#E1E4E8"> [command]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode session [command]"><div></div></button></div></figure></div>
+<hr>
+<h4 id="list-3"><a href="#list-3">list</a></h4>
+<p>List all OpenCode sessions.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">session</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">list</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode session list"><div></div></button></div></figure></div>
+<h5 id="flags-8"><a href="#flags-8">Flags</a></h5>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Short</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--max-count</code></nobr></td><td><code dir="auto">-n</code></td><td>Limit to N most recent sessions</td></tr><tr><td><nobr><code>--format</code></nobr></td><td></td><td>Output format: table or json (table)</td></tr></tbody></table>
+<hr>
+<h4 id="delete"><a href="#delete">delete</a></h4>
+<p>Delete an OpenCode session.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">session</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">delete</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">&#x3C;sessionID></span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode session delete <sessionID>"><div></div></button></div></figure></div>
+<hr>
+<h3 id="stats"><a href="#stats">stats</a></h3>
+<p>Show token usage and cost statistics for your OpenCode sessions.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">stats</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode stats"><div></div></button></div></figure></div>
+<h4 id="flags-9"><a href="#flags-9">Flags</a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--days</code></nobr></td><td>Show stats for the last N days (all time)</td></tr><tr><td><nobr><code>--tools</code></nobr></td><td>Number of tools to show (all)</td></tr><tr><td><nobr><code>--models</code></nobr></td><td>Show model usage breakdown (hidden by default). Pass a number to show top N</td></tr><tr><td><nobr><code>--project</code></nobr></td><td>Filter by project (all projects, empty string: current project)</td></tr></tbody></table>
+<hr>
+<h3 id="export"><a href="#export">export</a></h3>
+<p>Export session data as JSON.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">export</span><span style="--0:#24292E;--1:#E1E4E8"> [sessionID]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode export [sessionID]"><div></div></button></div></figure></div>
+<p>If you don’t provide a session ID, you’ll be prompted to select from available sessions.</p>
+<h4 id="flags-10"><a href="#flags-10">Flags</a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--sanitize</code></nobr></td><td>Redact sensitive transcript/file data</td></tr></tbody></table>
+<hr>
+<h3 id="import"><a href="#import">import</a></h3>
+<p>Import session data from a JSON file or OpenCode share URL.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">import</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">&#x3C;file></span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode import <file>"><div></div></button></div></figure></div>
+<p>You can import from a local file or an OpenCode share URL.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">import</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">session.json</span></div></div><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">import</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">https://opncd.ai/s/abc123</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode import session.jsonopencode import https://opncd.ai/s/abc123"><div></div></button></div></figure></div>
+<hr>
+<h3 id="web"><a href="#web">web</a></h3>
+<p>Start a headless OpenCode server with a web interface.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">web</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode web"><div></div></button></div></figure></div>
+<p>This starts an HTTP server and opens a web browser to access OpenCode through a web interface. Set <code dir="auto">OPENCODE_SERVER_PASSWORD</code> to enable HTTP basic auth (username defaults to <code dir="auto">opencode</code>).</p>
+<h4 id="flags-11"><a href="#flags-11">Flags</a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--port</code></nobr></td><td>Port to listen on</td></tr><tr><td><nobr><code>--hostname</code></nobr></td><td>Hostname to listen on</td></tr><tr><td><nobr><code>--mdns</code></nobr></td><td>Enable mDNS discovery</td></tr><tr><td><nobr><code>--mdns-domain</code></nobr></td><td>Custom mDNS domain name</td></tr><tr><td><nobr><code>--cors</code></nobr></td><td>Additional browser origin(s) to allow CORS</td></tr></tbody></table>
+<hr>
+<h3 id="acp"><a href="#acp">acp</a></h3>
+<p>Start an ACP (Agent Client Protocol) server.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">acp</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode acp"><div></div></button></div></figure></div>
+<p>This command starts an ACP server that communicates via stdin/stdout using nd-JSON.</p>
+<h4 id="flags-12"><a href="#flags-12">Flags</a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--cwd</code></nobr></td><td>Working directory</td></tr><tr><td><nobr><code>--port</code></nobr></td><td>Port to listen on</td></tr><tr><td><nobr><code>--hostname</code></nobr></td><td>Hostname to listen on</td></tr><tr><td><nobr><code>--mdns</code></nobr></td><td>Enable mDNS discovery</td></tr><tr><td><nobr><code>--mdns-domain</code></nobr></td><td>Custom mDNS domain name</td></tr><tr><td><nobr><code>--cors</code></nobr></td><td>Additional browser origin(s) to allow CORS</td></tr></tbody></table>
+<hr>
+<h3 id="plugin"><a href="#plugin">plugin</a></h3>
+<p>Install a plugin and update your config.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">plugin</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">&#x3C;module></span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode plugin <module>"><div></div></button></div></figure></div>
+<p>Or use the alias.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">plug</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">&#x3C;module></span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode plug <module>"><div></div></button></div></figure></div>
+<h4 id="flags-13"><a href="#flags-13">Flags</a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Short</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--global</code></nobr></td><td><code dir="auto">-g</code></td><td>Install in global config</td></tr><tr><td><nobr><code>--force</code></nobr></td><td><code dir="auto">-f</code></td><td>Replace existing plugin version</td></tr></tbody></table>
+<hr>
+<h3 id="pr"><a href="#pr">pr</a></h3>
+<p>Fetch and checkout a GitHub PR branch, then run OpenCode.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">pr</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">&#x3C;number></span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode pr <number>"><div></div></button></div></figure></div>
+<hr>
+<h3 id="db"><a href="#db">db</a></h3>
+<p>Database tools.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">db</span><span style="--0:#24292E;--1:#E1E4E8"> [query]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode db [query]"><div></div></button></div></figure></div>
+<h4 id="flags-14"><a href="#flags-14">Flags</a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--format</code></nobr></td><td>Output format: <code dir="auto">json</code> or <code dir="auto">tsv</code></td></tr></tbody></table>
+<hr>
+<h4 id="path"><a href="#path">path</a></h4>
+<p>Print the database path.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">db</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">path</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode db path"><div></div></button></div></figure></div>
+<hr>
+<h3 id="debug-1"><a href="#debug-1">debug</a></h3>
+<p>Debugging and troubleshooting tools.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">debug</span><span style="--0:#24292E;--1:#E1E4E8"> [command]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode debug [command]"><div></div></button></div></figure></div>
+<hr>
+<h3 id="uninstall"><a href="#uninstall">uninstall</a></h3>
+<p>Uninstall OpenCode and remove all related files.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">uninstall</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode uninstall"><div></div></button></div></figure></div>
+<h4 id="flags-15"><a href="#flags-15">Flags</a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Short</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--keep-config</code></nobr></td><td><code dir="auto">-c</code></td><td>Keep configuration files</td></tr><tr><td><nobr><code>--keep-data</code></nobr></td><td><code dir="auto">-d</code></td><td>Keep session data and snapshots</td></tr><tr><td><nobr><code>--dry-run</code></nobr></td><td></td><td>Show what would be removed without removing</td></tr><tr><td><nobr><code>--force</code></nobr></td><td><code dir="auto">-f</code></td><td>Skip confirmation prompts</td></tr></tbody></table>
+<hr>
+<h3 id="upgrade"><a href="#upgrade">upgrade</a></h3>
+<p>Updates opencode to the latest version or a specific version.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">upgrade</span><span style="--0:#24292E;--1:#E1E4E8"> [target]</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode upgrade [target]"><div></div></button></div></figure></div>
+<p>To upgrade to the latest version.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">upgrade</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode upgrade"><div></div></button></div></figure></div>
+<p>To upgrade to a specific version.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">opencode</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">upgrade</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">v0.1.48</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="opencode upgrade v0.1.48"><div></div></button></div></figure></div>
+<h4 id="flags-16"><a href="#flags-16">Flags</a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Short</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--method</code></nobr></td><td><code dir="auto">-m</code></td><td>The installation method that was used; curl, npm, pnpm, bun, brew</td></tr></tbody></table>
+<hr>
+<h2 id="global-flags"><a href="#global-flags">Global Flags</a></h2>
+<p>The opencode CLI takes the following global flags.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Short</th><th>Description</th></tr></thead><tbody><tr><td><nobr><code>--help</code></nobr></td><td><code dir="auto">-h</code></td><td>Display help</td></tr><tr><td><nobr><code>--version</code></nobr></td><td><code dir="auto">-v</code></td><td>Print version number</td></tr><tr><td><nobr><code>--print-logs</code></nobr></td><td></td><td>Print logs to stderr</td></tr><tr><td><nobr><code>--log-level</code></nobr></td><td></td><td>Log level (DEBUG, INFO, WARN, ERROR)</td></tr><tr><td><nobr><code>--pure</code></nobr></td><td></td><td>Run without external plugins</td></tr></tbody></table>
+<hr>
+<h2 id="environment-variables"><a href="#environment-variables">Environment variables</a></h2>
+<p>OpenCode can be configured using environment variables.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code dir="auto">OPENCODE_AUTO_SHARE</code></td><td>boolean</td><td>Automatically share sessions</td></tr><tr><td><code dir="auto">OPENCODE_GIT_BASH_PATH</code></td><td>string</td><td>Path to Git Bash executable on Windows</td></tr><tr><td><code dir="auto">OPENCODE_CONFIG</code></td><td>string</td><td>Path to config file</td></tr><tr><td><code dir="auto">OPENCODE_TUI_CONFIG</code></td><td>string</td><td>Path to TUI config file</td></tr><tr><td><code dir="auto">OPENCODE_CONFIG_DIR</code></td><td>string</td><td>Path to config directory</td></tr><tr><td><code dir="auto">OPENCODE_CONFIG_CONTENT</code></td><td>string</td><td>Inline json config content</td></tr><tr><td><code dir="auto">OPENCODE_DISABLE_AUTOUPDATE</code></td><td>boolean</td><td>Disable automatic update checks</td></tr><tr><td><code dir="auto">OPENCODE_DISABLE_PRUNE</code></td><td>boolean</td><td>Disable pruning of old data</td></tr><tr><td><code dir="auto">OPENCODE_DISABLE_TERMINAL_TITLE</code></td><td>boolean</td><td>Disable automatic terminal title updates</td></tr><tr><td><code dir="auto">OPENCODE_PERMISSION</code></td><td>string</td><td>Inlined json permissions config</td></tr><tr><td><code dir="auto">OPENCODE_DISABLE_DEFAULT_PLUGINS</code></td><td>boolean</td><td>Disable default plugins</td></tr><tr><td><code dir="auto">OPENCODE_DISABLE_LSP_DOWNLOAD</code></td><td>boolean</td><td>Disable automatic LSP server downloads</td></tr><tr><td><code dir="auto">OPENCODE_ENABLE_EXPERIMENTAL_MODELS</code></td><td>boolean</td><td>Enable experimental models</td></tr><tr><td><code dir="auto">OPENCODE_DISABLE_AUTOCOMPACT</code></td><td>boolean</td><td>Disable automatic context compaction</td></tr><tr><td><code dir="auto">OPENCODE_DISABLE_CLAUDE_CODE</code></td><td>boolean</td><td>Disable reading from <code dir="auto">.claude</code> (prompt + skills)</td></tr><tr><td><code dir="auto">OPENCODE_DISABLE_CLAUDE_CODE_PROMPT</code></td><td>boolean</td><td>Disable reading <code dir="auto">~/.claude/CLAUDE.md</code></td></tr><tr><td><code dir="auto">OPENCODE_DISABLE_CLAUDE_CODE_SKILLS</code></td><td>boolean</td><td>Disable loading <code dir="auto">.claude/skills</code></td></tr><tr><td><code dir="auto">OPENCODE_DISABLE_MODELS_FETCH</code></td><td>boolean</td><td>Disable fetching models from remote sources</td></tr><tr><td><code dir="auto">OPENCODE_DISABLE_MOUSE</code></td><td>boolean</td><td>Disable mouse capture in the TUI</td></tr><tr><td><code dir="auto">OPENCODE_FAKE_VCS</code></td><td>string</td><td>Fake VCS provider for testing purposes</td></tr><tr><td><code dir="auto">OPENCODE_CLIENT</code></td><td>string</td><td>Client identifier (defaults to <code dir="auto">cli</code>)</td></tr><tr><td><code dir="auto">OPENCODE_ENABLE_EXA</code></td><td>boolean</td><td>Enable Exa web search tools</td></tr><tr><td><code dir="auto">OPENCODE_SERVER_PASSWORD</code></td><td>string</td><td>Enable basic auth for <code dir="auto">serve</code>/<code dir="auto">web</code></td></tr><tr><td><code dir="auto">OPENCODE_SERVER_USERNAME</code></td><td>string</td><td>Override basic auth username (default <code dir="auto">opencode</code>)</td></tr><tr><td><code dir="auto">OPENCODE_MODELS_URL</code></td><td>string</td><td>Custom URL for fetching models configuration</td></tr></tbody></table>
+<hr>
+<h3 id="experimental"><a href="#experimental">Experimental</a></h3>
+<p>These environment variables enable experimental features that may change or be removed.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL</code></td><td>boolean</td><td>Enable the experimental umbrella flag</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_ICON_DISCOVERY</code></td><td>boolean</td><td>Enable icon discovery</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT</code></td><td>boolean</td><td>Disable copy on select in TUI</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS</code></td><td>number</td><td>Default timeout for bash commands in ms</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX</code></td><td>number</td><td>Max output tokens for LLM responses</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_FILEWATCHER</code></td><td>boolean</td><td>Enable file watcher for entire dir</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_OXFMT</code></td><td>boolean</td><td>Enable oxfmt formatter</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_LSP_TOOL</code></td><td>boolean</td><td>Enable experimental LSP tool</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER</code></td><td>boolean</td><td>Disable file watcher</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_EXA</code></td><td>boolean</td><td>Enable experimental Exa features</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_LSP_TY</code></td><td>boolean</td><td>Enable TY LSP for python files</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_PLAN_MODE</code></td><td>boolean</td><td>Enable plan mode</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS</code></td><td>boolean</td><td>Enable background subagent tasks</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_EVENT_SYSTEM</code></td><td>boolean</td><td>Enable experimental event system</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_NATIVE_LLM</code></td><td>boolean</td><td>Enable native LLM request path</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_PARALLEL</code></td><td>boolean</td><td>Enable parallel web search execution</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_SCOUT</code></td><td>boolean</td><td>Enable Scout subagent</td></tr><tr><td><code dir="auto">OPENCODE_EXPERIMENTAL_WORKSPACES</code></td><td>boolean</td><td>Enable workspace support</td></tr></tbody></table> </div> <footer class="doc astro-sz7xmlte"><div class="meta sl-flex astro-sz7xmlte"><div class="astro-sz7xmlte"><a href="https://github.com/anomalyco/opencode/edit/dev/packages/web/src/content/docs/cli.mdx" target="_blank" rel="noopener noreferrer" class="sl-flex astro-sz7xmlte"><svg aria-hidden="true" class="astro-sz7xmlte astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M22 7.24a1 1 0 0 0-.29-.71l-4.24-4.24a1 1 0 0 0-1.1-.22 1 1 0 0 0-.32.22l-2.83 2.83L2.29 16.05a1 1 0 0 0-.29.71V21a1 1 0 0 0 1 1h4.24a1 1 0 0 0 .76-.29l10.87-10.93L21.71 8c.1-.1.17-.2.22-.33a1 1 0 0 0 0-.24v-.14l.07-.05ZM6.83 20H4v-2.83l9.93-9.93 2.83 2.83L6.83 20ZM18.17 8.66l-2.83-2.83 1.42-1.41 2.82 2.82-1.41 1.42Z"/></svg>Edit page</a><a href="https://github.com/anomalyco/opencode/issues/new" target="_blank" rel="noopener noreferrer" class="sl-flex astro-sz7xmlte"><svg aria-hidden="true" class="astro-sz7xmlte astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.08 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3Z"/></svg>Found a bug? Open an issue</a><a href="https://opencode.ai/discord" target="_blank" rel="noopener noreferrer" class="sl-flex astro-sz7xmlte"><svg aria-hidden="true" class="astro-sz7xmlte astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.93-1.51 13.78 13.78 0 0 0-.64 1.28 18.27 18.27 0 0 0-5.5 0 12.64 12.64 0 0 0-.64-1.28h-.05A19.74 19.74 0 0 0 3.64 4.4 20.26 20.26 0 0 0 .11 18.09l.02.02a19.9 19.9 0 0 0 6.04 3.03l.04-.02a14.24 14.24 0 0 0 1.23-2.03.08.08 0 0 0-.05-.07 13.1 13.1 0 0 1-1.9-.92.08.08 0 0 1 .02-.1 10.2 10.2 0 0 0 .41-.31h.04a14.2 14.2 0 0 0 12.1 0l.04.01a9.63 9.63 0 0 0 .4.32.08.08 0 0 1-.03.1 12.29 12.29 0 0 1-1.9.91.08.08 0 0 0-.02.1 15.97 15.97 0 0 0 1.27 2.01h.04a19.84 19.84 0 0 0 6.03-3.05v-.03a20.12 20.12 0 0 0-3.57-13.69ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.08-2.15-2.42 0-1.33.95-2.42 2.15-2.42 1.22 0 2.18 1.1 2.16 2.42 0 1.34-.94 2.42-2.16 2.42Z"/></svg>Join our Discord community</a><opencode-language-select data-locales="[&#34;root&#34;,&#34;ar&#34;,&#34;bs&#34;,&#34;da&#34;,&#34;de&#34;,&#34;es&#34;,&#34;fr&#34;,&#34;it&#34;,&#34;ja&#34;,&#34;ko&#34;,&#34;nb&#34;,&#34;pl&#34;,&#34;pt-br&#34;,&#34;ru&#34;,&#34;th&#34;,&#34;tr&#34;,&#34;zh-cn&#34;,&#34;zh-tw&#34;]" class="astro-ztav45zs"> <starlight-lang-select><label style="--sl-select-width: 7em" class="astro-kesctxeq"> <span class="sr-only astro-kesctxeq">Select language</span> <svg aria-hidden="true" class="icon label-icon astro-kesctxeq astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path fill-rule="evenodd" d="M8.516 3a.94.94 0 0 0-.941.94v1.15H2.94a.94.94 0 1 0 0 1.882h7.362a7.422 7.422 0 0 1-1.787 3.958 7.42 7.42 0 0 1-1.422-2.425.94.94 0 1 0-1.774.627 9.303 9.303 0 0 0 1.785 3.043 7.422 7.422 0 0 1-4.164 1.278.94.94 0 1 0 0 1.881 9.303 9.303 0 0 0 5.575-1.855 9.303 9.303 0 0 0 4.11 1.74l-.763 1.525a.968.968 0 0 0-.016.034l-1.385 2.77a.94.94 0 1 0 1.683.841l1.133-2.267h5.806l1.134 2.267a.94.94 0 0 0 1.683-.841l-1.385-2.769a.95.95 0 0 0-.018-.036l-3.476-6.951a.94.94 0 0 0-1.682 0l-1.82 3.639a7.423 7.423 0 0 1-3.593-1.256 9.303 9.303 0 0 0 2.27-5.203h1.894a.94.94 0 0 0 0-1.881H9.456V3.94A.94.94 0 0 0 8.516 3Zm6.426 11.794a1.068 1.068 0 0 1-.02.039l-.703 1.407h3.924l-1.962-3.924-1.24 2.478Z" clip-rule="evenodd"/></svg> <select value="/docs/cli/" autocomplete="off" class="astro-kesctxeq"> <option value="/docs/cli/" class="astro-kesctxeq">English</option><option value="/docs/ar/cli/" class="astro-kesctxeq">العربية</option><option value="/docs/bs/cli/" class="astro-kesctxeq">Bosanski</option><option value="/docs/da/cli/" class="astro-kesctxeq">Dansk</option><option value="/docs/de/cli/" class="astro-kesctxeq">Deutsch</option><option value="/docs/es/cli/" class="astro-kesctxeq">Español</option><option value="/docs/fr/cli/" class="astro-kesctxeq">Français</option><option value="/docs/it/cli/" class="astro-kesctxeq">Italiano</option><option value="/docs/ja/cli/" class="astro-kesctxeq">日本語</option><option value="/docs/ko/cli/" class="astro-kesctxeq">한국어</option><option value="/docs/nb/cli/" class="astro-kesctxeq">Norsk Bokmål</option><option value="/docs/pl/cli/" class="astro-kesctxeq">Polski</option><option value="/docs/pt-br/cli/" class="astro-kesctxeq">Português (Brasil)</option><option value="/docs/ru/cli/" class="astro-kesctxeq">Русский</option><option value="/docs/th/cli/" class="astro-kesctxeq">ไทย</option><option value="/docs/tr/cli/" class="astro-kesctxeq">Türkçe</option><option value="/docs/zh-cn/cli/" class="astro-kesctxeq">简体中文</option><option value="/docs/zh-tw/cli/" class="astro-kesctxeq">繁體中文</option> </select> <svg aria-hidden="true" class="icon caret astro-kesctxeq astro-36bnt3z5" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg> </label> </starlight-lang-select><script type="module">class s extends HTMLElement{constructor(){super();const e=this.querySelector("select");e&&(e.addEventListener("change",t=>{t.currentTarget instanceof HTMLSelectElement&&(window.location.pathname=t.currentTarget.value)}),window.addEventListener("pageshow",t=>{if(!t.persisted)return;const n=e.querySelector("option[selected]")?.index;n!==e.selectedIndex&&(e.selectedIndex=n??0)}))}}customElements.define("starlight-lang-select",s);</script> </opencode-language-select> <script type="module">document.addEventListener("change",e=>{if(!(e.target instanceof HTMLSelectElement))return;const o=e.target.closest("opencode-language-select");if(!(o instanceof HTMLElement))return;const t=JSON.parse(o.dataset.locales??"[]")[e.target.selectedIndex];t&&(document.cookie=`oc_locale=${encodeURIComponent(t==="root"?"en":t)}; Path=/; Max-Age=31536000; SameSite=Lax`)});</script> </div><div class="astro-sz7xmlte"><p class="astro-sz7xmlte">&copy; <a target="_blank" rel="noopener noreferrer" href="https://anoma.ly" class="astro-sz7xmlte">Anomaly</a></p><p title="Last updated:" class="astro-sz7xmlte">Last updated: <time datetime="2026-07-31T17:15:27.000Z" class="astro-sz7xmlte">Jul 31, 2026</time></p></div></div></footer> </div> </div>   </main> </div> </div>  </div> </div>  </body></html>

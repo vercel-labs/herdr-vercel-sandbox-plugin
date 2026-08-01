@@ -71,7 +71,7 @@ async function fixture() {
         mode: "remote",
         checkedAt: "2026-08-01T12:00:00.000Z",
         checkIntervalDays: 90,
-        upstreamSha256: digest("upstream fixture document"),
+        upstreamSha256: digest(capture),
       },
       capture: "sources/fixture.txt",
       captureSha256: digest(capture),
@@ -183,7 +183,7 @@ test("source authority, verification method, upstream hashes, and manifest schem
 
 test("remote freshness verification detects upstream document changes", async () => {
   await withFixture(async ({ manifest, record }) => {
-    const expected = Buffer.from("upstream fixture document");
+    const expected = Buffer.from("Official documentation\nfixture install command\n");
     const passing = await verifyRemoteSourceFreshness(manifest, {
       fetchImpl: async () => ({ ok: true, status: 200, arrayBuffer: async () => expected }),
     });
@@ -197,6 +197,18 @@ test("remote freshness verification detects upstream document changes", async ()
     await assert.rejects(() => verifyRemoteSourceFreshness(manifest, {
       fetchImpl: async () => ({ ok: true, status: 200, arrayBuffer: async () => expected }),
     }), /no remote HTTPS source URL/);
+  });
+});
+
+test("remote freshness verification rejects an upstream that no longer contains the quote", async () => {
+  await withFixture(async ({ manifest, record }) => {
+    // Hash matches the recorded upstream, but the quote is absent: the claim
+    // must fail instead of resting on the locally stored capture.
+    const bodyWithoutQuote = Buffer.from("Official documentation\nsomething else entirely\n");
+    record.sources[0].freshness.upstreamSha256 = digest(bodyWithoutQuote);
+    await assert.rejects(() => verifyRemoteSourceFreshness(manifest, {
+      fetchImpl: async () => ({ ok: true, status: 200, arrayBuffer: async () => bodyWithoutQuote }),
+    }), /does not contain the exact quote/);
   });
 });
 

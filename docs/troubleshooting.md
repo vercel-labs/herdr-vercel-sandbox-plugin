@@ -41,7 +41,11 @@ Retry setup from the mapped pane. If the resource is unwanted, use **Delete Sand
 
 ## A file is missing from the upload manifest
 
-Git-ignored files are excluded even when still tracked. High-confidence credential paths, extensions, and content are also excluded. Add `uploadExcludes` for more exclusions. To include one normally-sensitive non-secret fixture, add its exact repository-relative path to `sensitiveFileOverrides`, review the complete manifest, and invoke Start a second time with the unchanged digest. Do not override real credentials; create scoped service authentication inside the Sandbox instead.
+Git-ignored files are excluded even when still tracked. High-confidence credential paths, extensions, and content are also excluded. Add `uploadExcludes` for more exclusions; the supported patterns are an exact path, `dir/`, `dir/**`, or `*.ext`, and anything else is rejected when the config loads. To include one normally-sensitive non-secret fixture, add its exact repository-relative path to `sensitiveFileOverrides` (globs are rejected), review the complete manifest, and invoke Start a second time within 10 minutes with the unchanged digest. Do not override real credentials; create scoped service authentication inside the Sandbox instead.
+
+## The config file reports an unsupported key
+
+`config.json` rejects unknown keys so a typo cannot silently disable a safety setting. The error lists every supported key. Fix the spelling and rerun the action. The older spellings `uploadExclusions` and `uploadOverrides` are still accepted, but keep only one spelling per setting.
 
 ## The local repository moved
 
@@ -49,7 +53,13 @@ Open or `cd` a Herdr pane into the worktree at its new location, then invoke **R
 
 ## Applying changes reports a conflict
 
-The plugin runs `git apply --check` before changing the local worktree. If that check fails, nothing is applied. Commit, stash, or resolve the overlapping local changes, then run **Apply Sandbox changes locally** again. The remote files remain in the persistent Sandbox while you resolve the conflict.
+The plugin runs `git apply --check` before changing the local worktree. If that check fails, nothing is applied. Apply is incremental: each successful apply advances a snapshot marker, so the next apply exports only newer Sandbox work, and re-applying the same changes reports "already present locally" instead of failing. A genuine conflict therefore means the Sandbox changes overlap uncommitted local edits. Commit, stash, or resolve the overlapping local work, then run **Apply Sandbox changes locally** again. The remote files remain in the persistent Sandbox while you resolve the conflict.
+
+One upgrade note: Sandboxes that had changes applied under plugin versions up to 0.3.0 never advanced their marker, so the first apply after upgrading can conflict with those already-applied changes. If the conflict output shows only changes you already have locally, the re-apply detection resolves it on the next invocation; otherwise resolve as above or replace the Sandbox.
+
+## Stop reported a failure
+
+Stop reads the CLI's real output instead of trusting its exit code (`vercel sandbox stop` can exit 0 while printing a failure). A reported stop failure means compute was not confirmed stopped: retry, and if the Sandbox is reported missing, use **Replace this Sandbox** or **Delete Sandbox and forget mapping**.
 
 ## Herdr was detached or restarted
 
@@ -62,6 +72,10 @@ If a stale mapping should no longer be associated with the pane, exit the agent 
 ## A confirmed deletion partially fails
 
 Deletion is sequential. After every successful remote deletion, the plugin immediately records that name locally. If a later deletion fails, the mapping remains and the action exits without replacing or forgetting it. Invoke the same action twice again to confirm deletion of only the remaining names.
+
+## A legacy mapping has no saved team/project target
+
+Mappings created before version 0.3.0 did not record their Vercel team and project, so the plugin cannot safely delete their remote Sandboxes. **Delete Sandbox and forget mapping** still works after the same two-step confirmation: it forgets the local mapping and prints the Sandbox names it could not delete remotely. If those Sandboxes still exist, remove them with `vercel sandbox remove <name>` in the owning team and project.
 
 ## Inspect the mapping before acting
 

@@ -14,7 +14,7 @@ import {
   sandboxArgs,
   sandboxCli,
   sandboxNamesForDeletion,
-  saveState,
+  savePaneEntry,
   shellQuote,
   stateForPane,
 } from "./lib.mjs";
@@ -62,6 +62,26 @@ function vercel(args, runOptions = {}) {
   });
 }
 
+// `vercel sandbox stop` (and siblings that render a progress spinner) can exit
+// 0 while printing a failure, measured on CLI 56.2.0. Exit status alone is not
+// proof of success, so these commands are captured and their output inspected.
+function vercelChecked(args, operation) {
+  const result = vercel(args, { capture: true, allowFailure: true });
+  const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`.trim();
+  if (output) console.log(output);
+  const failed = result.status !== 0
+    || /\[FAILED(?::|\])/i.test(output)
+    || /^\s*✖/mu.test(output)
+    || /status code:\s*[45]\d\d/i.test(output);
+  if (failed) {
+    const failure = classifySandboxExecFailure(result);
+    const error = new Error(`Sandbox ${operation} failed (${failure.kind}).`);
+    error.failure = failure;
+    throw error;
+  }
+  return result;
+}
+
 function preflight() {
   const help = run(cli.executable, [...cli.prefix, "--help"], { capture: true });
   if (
@@ -89,16 +109,23 @@ async function prepare() {
       }
       entry.lifecycleState = "creating";
       entry.lastError = undefined;
-      await saveState(options.state_dir, state);
-      vercel([
-        "create", "--name", entry.sandboxName,
-        "--runtime", config.runtime ?? "node24",
-        "--timeout", config.timeout ?? "1h",
-      ]);
+      await savePaneEntry(options.state_dir, options.pane_id, entry);
+      try {
+        vercelChecked([
+          "create", "--name", entry.sandboxName,
+          "--runtime", config.runtime ?? "node24",
+          "--timeout", config.timeout ?? "1h",
+        ], "create");
+      } catch (error) {
+        throw new Error(
+          `${error.message}\nIf an earlier interrupted run already created ${entry.sandboxName}, `
+          + "permanently delete it with Replace this Sandbox or Delete Sandbox and forget mapping, then start again.",
+        );
+      }
       entry.remoteCreated = true;
       entry.lifecycleState = "created";
       entry.remoteCreatedAt = new Date().toISOString();
-      await saveState(options.state_dir, state);
+      await savePaneEntry(options.state_dir, options.pane_id, entry);
     } else {
       const existing = vercel(
       ["exec", entry.sandboxName, "--", "sh", "-lc", `mkdir -p ${shellQuote(remoteRoot)}`],
@@ -108,7 +135,7 @@ async function prepare() {
         const failure = classifySandboxExecFailure(existing);
         entry.lifecycleState = failure.kind === "not-found" ? "missing" : "failed";
         entry.lastError = { operation: "reconnect", kind: failure.kind, output: failure.output, at: new Date().toISOString() };
-        await saveState(options.state_dir, state);
+        await savePaneEntry(options.state_dir, options.pane_id, entry);
         if (failure.kind === "not-found") {
           throw new Error(`Mapped Sandbox ${entry.sandboxName} is missing. It was not replaced. Choose Replace this Sandbox or permanently delete the mapping.`);
         }
@@ -117,7 +144,7 @@ async function prepare() {
     }
     vercel(["exec", entry.sandboxName, "--", "sh", "-lc", `mkdir -p ${shellQuote(remoteRoot)}`]);
     const remoteArchive = `/tmp/herdr-${options.pane_id.replace(/[^a-zA-Z0-9]/g, "-")}.tar.gz`;
-    vercel(["copy", archive.archivePath, `${entry.sandboxName}:${remoteArchive}`]);
+    vercelChecked(["copy", archive.archivePath, `${entry.sandboxName}:${remoteArchive}`], "workspace upload");
 
     const setup = [
       "set -eu",
@@ -150,13 +177,13 @@ async function prepare() {
     entry.installedVersion = installedVersion;
     entry.capabilities = adapter.capabilities;
     entry.adapterStatus = supportedStatus(adapter);
-    await saveState(options.state_dir, state);
+    await savePaneEntry(options.state_dir, options.pane_id, entry);
   } catch (error) {
     if (entry.lifecycleState !== "missing") {
       entry.lifecycleState = entry.remoteCreated ? "failed" : entry.lifecycleState;
     }
     entry.lastError ??= { operation: "prepare", message: error.message, at: new Date().toISOString() };
-    await saveState(options.state_dir, state);
+    await savePaneEntry(options.state_dir, options.pane_id, entry);
     throw error;
   } finally {
     await archive.cleanup();
@@ -180,13 +207,13 @@ async function connect() {
     const failure = classifySandboxExecFailure(probe);
     entry.lifecycleState = failure.kind === "not-found" ? "missing" : "failed";
     entry.lastError = { operation: "connect", kind: failure.kind, output: failure.output, at: new Date().toISOString() };
-    await saveState(options.state_dir, state);
+    await savePaneEntry(options.state_dir, options.pane_id, entry);
     throw new Error(`Could not reconnect to mapped Sandbox ${entry.sandboxName} (${failure.kind}). No Sandbox was created.${failure.output ? `\n${failure.output}` : ""}`);
   }
   entry.lifecycleState = "ready";
   entry.lastError = undefined;
   entry.lastConnectedAt = new Date().toISOString();
-  await saveState(options.state_dir, state);
+  await savePaneEntry(options.state_dir, options.pane_id, entry);
   const launch = adapter.launchScript(config);
   try {
     const result = vercel([
@@ -205,22 +232,59 @@ async function applyChanges() {
   const tempDir = await mkdtemp(path.join(tmpdir(), "herdr-patch-"));
   const patchPath = path.join(tempDir, `${entry.sandboxName}.patch`);
   const remotePatch = `/tmp/${entry.sandboxName}.patch`;
+  const advanceBaseline = () => vercel(
+    ["exec", entry.sandboxName, "--", "sh", "-lc", `cd ${shellQuote(remoteRoot)} && git tag -f herdr-baseline herdr-export`],
+    { capture: true, allowFailure: true },
+  );
   try {
+    // Local state records the last export snapshot this worktree actually
+    // received. Re-sync the remote baseline from it first, so a crash between
+    // a past local apply and its baseline advance cannot make future patches
+    // cumulative again.
+    if (entry.lastAppliedExportCommit) {
+      vercel([
+        "exec", entry.sandboxName, "--", "sh", "-lc",
+        `cd ${shellQuote(remoteRoot)} && git tag -f herdr-baseline ${shellQuote(entry.lastAppliedExportCommit)}`,
+      ], { capture: true });
+    }
     const createPatch = [
       "set -eu",
       `cd ${shellQuote(remoteRoot)}`,
       "git add -A",
-      `git diff --binary herdr-baseline -- > ${shellQuote(remotePatch)}`,
+      "git -c user.name='Herdr Sandbox' -c user.email='herdr-sandbox@localhost' commit -qm 'herdr export snapshot' --allow-empty",
+      "git tag -f herdr-export",
+      `git diff --binary herdr-baseline herdr-export -- > ${shellQuote(remotePatch)}`,
+      "git rev-parse herdr-export",
     ].join("\n");
-    vercel(["exec", entry.sandboxName, "--", "sh", "-lc", createPatch]);
-    vercel(["copy", `${entry.sandboxName}:${remotePatch}`, patchPath]);
+    const exported = vercel(["exec", entry.sandboxName, "--", "sh", "-lc", createPatch], { capture: true });
+    const exportCommit = (exported.stdout.match(/\b[0-9a-f]{40}\b/) ?? [])[0];
+    if (!exportCommit) throw new Error("Could not read the export snapshot commit from the Sandbox.");
+    vercelChecked(["copy", `${entry.sandboxName}:${remotePatch}`, patchPath], "patch download");
     if ((await fileSize(patchPath)) === 0) {
       console.log(`No changes to apply from ${entry.sandboxName}.`);
       return;
     }
-    run("git", ["-C", entry.localRoot, "apply", "--check", patchPath]);
-    run("git", ["-C", entry.localRoot, "apply", patchPath]);
-    console.log(`Applied Sandbox changes to ${entry.localRoot}.`);
+    const check = run("git", ["-C", entry.localRoot, "apply", "--check", patchPath], { capture: true, allowFailure: true });
+    if (check.status === 0) {
+      run("git", ["-C", entry.localRoot, "apply", patchPath]);
+      entry.lastAppliedExportCommit = exportCommit;
+      await savePaneEntry(options.state_dir, options.pane_id, entry);
+      advanceBaseline();
+      console.log(`Applied Sandbox changes to ${entry.localRoot}. The next apply exports only newer changes.`);
+      return;
+    }
+    const reverse = run("git", ["-C", entry.localRoot, "apply", "--check", "--reverse", patchPath], { capture: true, allowFailure: true });
+    if (reverse.status === 0) {
+      entry.lastAppliedExportCommit = exportCommit;
+      await savePaneEntry(options.state_dir, options.pane_id, entry);
+      advanceBaseline();
+      console.log("These Sandbox changes are already present locally. Advanced the export marker; no local file was changed.");
+      return;
+    }
+    throw new Error(
+      `Sandbox changes conflict with this worktree; nothing was applied. `
+      + `Commit, stash, or resolve the overlapping local work, then invoke Apply Sandbox changes locally again.\n${check.stderr || check.stdout || ""}`,
+    );
   } finally {
     vercel(["exec", entry.sandboxName, "--", "rm", "-f", remotePatch], { allowFailure: true, capture: true });
     await rm(tempDir, { recursive: true, force: true });
@@ -229,10 +293,22 @@ async function applyChanges() {
 
 async function stop() {
   preflight();
-  vercel(["stop", entry.sandboxName]);
+  try {
+    vercelChecked(["stop", entry.sandboxName], "stop");
+  } catch (error) {
+    const kind = error.failure?.kind ?? "unknown";
+    if (kind === "not-found") entry.lifecycleState = "missing";
+    entry.lastError = { operation: "stop", kind, output: error.failure?.output, at: new Date().toISOString() };
+    await savePaneEntry(options.state_dir, options.pane_id, entry);
+    if (kind === "not-found") {
+      throw new Error(`Mapped Sandbox ${entry.sandboxName} is missing; nothing was stopped. Choose Replace this Sandbox or permanently delete the mapping.`);
+    }
+    throw new Error(`Could not stop ${entry.sandboxName} (${kind}). Its previous state is unchanged.`);
+  }
   entry.lifecycleState = "stopped";
   entry.stoppedAt = new Date().toISOString();
-  await saveState(options.state_dir, state);
+  entry.lastError = undefined;
+  await savePaneEntry(options.state_dir, options.pane_id, entry);
   console.log(`Stopped ${entry.sandboxName}. Its persistent filesystem was preserved.`);
 }
 
@@ -255,7 +331,7 @@ async function deleteSandboxes() {
 
     entry.deletedSandboxNames = [...new Set([...(entry.deletedSandboxNames ?? []), name])];
     entry.lastDeletedAt = new Date().toISOString();
-    await saveState(options.state_dir, state);
+    await savePaneEntry(options.state_dir, options.pane_id, entry);
     console.log(missing
       ? `${name} was already absent remotely; marked it deleted locally.`
       : `Permanently deleted ${name}.`);

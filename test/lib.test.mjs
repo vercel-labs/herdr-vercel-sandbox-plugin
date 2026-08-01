@@ -16,6 +16,7 @@ import {
   hasProjectTarget,
   inspectVercelAuthentication,
   isSensitivePath,
+  isUploadApprovalFresh,
   loadState,
   makeSandboxName,
   readConfig,
@@ -23,7 +24,9 @@ import {
   resolveProjectConfig,
   restoreTerminal,
   sandboxNamesForDeletion,
+  savePaneEntry,
   saveState,
+  sensitiveContentReason,
   shellQuote,
 } from "../src/lib.mjs";
 import {
@@ -288,22 +291,51 @@ test("Claude Code is pinned and keeps remote authentication outside the uploaded
   assert.doesNotMatch(launch, /HOME=/);
 });
 
-test("adapter registration rejects self-asserted adapters without independent evidence", () => {
-  assert.throws(() => registerAgentAdapter({
-    kind: "fixture-agent",
-    title: "Fixture Agent",
+test("self-asserted adapters register only as non-selectable candidates with a recorded evidence error", () => {
+  const registered = registerAgentAdapter({
+    kind: "fixture-evidence-agent",
+    title: "Fixture Evidence Agent",
     pinnedVersion: "1.0.0",
-    verificationId: "fixture-agent@1.0.0",
+    verificationId: "fixture-evidence-agent@1.0.0",
     installScript() { return "true"; },
     launchScript() { return "true"; },
-    versionCommand: ["fixture-agent", "--version"],
+    versionCommand: ["fixture-evidence-agent", "--version"],
     capabilities: {
       interactiveTTY: true,
       authModes: ["test"],
       resumeSupported: true,
-      herdrDetectionKind: "fixture-agent",
+      herdrDetectionKind: "fixture-evidence-agent",
     },
-  }), /No independent verification record exists/);
+  });
+  assert.equal(registered.supportLevel, "evidence-invalid-candidate");
+  assert.match(registered.evidenceError, /No independent verification record exists/);
+  assert.equal(supportedAgentKinds().includes("fixture-evidence-agent"), false);
+  assert.throws(() => getAgentAdapter("fixture-evidence-agent"), /has not passed the live Sandbox lifecycle/);
+});
+
+test("evidence problems demote built-ins to candidates without breaking registration or cleanup paths", () => {
+  // Stale documentation must never make the module unloadable: stop/delete for
+  // existing Sandboxes depend on this module importing successfully.
+  const registered = registerAgentAdapter({
+    kind: "fixture-stale-agent",
+    title: "Fixture Stale Agent",
+    pinnedVersion: "1.0.0",
+    verificationId: "fixture-stale-agent@1.0.0",
+    installScript() { return "true"; },
+    launchScript() { return "true"; },
+    versionCommand: ["fixture-stale-agent", "--version"],
+    capabilities: {
+      interactiveTTY: true,
+      authModes: ["test"],
+      resumeSupported: true,
+      herdrDetectionKind: "fixture-stale-agent",
+    },
+  }, { now: new Date("2099-01-01T00:00:00.000Z") });
+  assert.equal(registered.supportLevel, "evidence-invalid-candidate");
+  assert.throws(
+    () => getAgentAdapter("fixture-stale-agent"),
+    /has not passed the live Sandbox lifecycle/,
+  );
 });
 
 test("every registered adapter produces shell-valid install and launch scripts", () => {
@@ -713,6 +745,107 @@ test("workspace archive excludes ignored and sensitive credentials while preserv
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("config uses the documented key names, rejects unknown keys, and validates patterns", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "herdr-config-contract-test-"));
+  const write = (value) => writeFile(path.join(dir, "config.json"), JSON.stringify(value));
+  try {
+    // The documented keys are the contract; they normalize onto the internal names.
+    await write({ uploadExcludes: ["private-fixtures/**"], sensitiveFileOverrides: ["fixtures/test.pem"] });
+    const config = await readConfig(dir);
+    assert.deepEqual(config.uploadExclusions, ["private-fixtures/**"]);
+    assert.deepEqual(config.uploadOverrides, ["fixtures/test.pem"]);
+
+    await write({ uploadExcludez: ["typo/**"] });
+    await assert.rejects(readConfig(dir), /unsupported key\(s\): uploadExcludez/);
+
+    await write({ uploadExcludes: ["a/**"], uploadExclusions: ["b/**"] });
+    await assert.rejects(readConfig(dir), /keep only uploadExcludes/);
+
+    await write({ uploadExcludes: ["src/*.js"] });
+    await assert.rejects(readConfig(dir), /unsupported/);
+    await write({ uploadExcludes: ["**/secret.txt"] });
+    await assert.rejects(readConfig(dir), /unsupported/);
+
+    // Broad override globs are rejected, not silently inert.
+    await write({ sensitiveFileOverrides: ["*"] });
+    await assert.rejects(readConfig(dir), /must be exact repository-relative paths/);
+    await write({ sensitiveFileOverrides: ["secrets/"] });
+    await assert.rejects(readConfig(dir), /must name a single file/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("custom agents require the explicit candidate opt-in for fresh starts", () => {
+  const profile = {
+    title: "Gated Agent",
+    installationCommand: "true",
+    launchCommand: "gated-agent",
+    versionCommand: "gated-agent --version",
+    expectedVersion: "1.0.0",
+    authenticationMode: "none",
+    herdrDetectionIdentifier: "gated-agent",
+    interactiveTTY: true,
+    resumeSupported: true,
+  };
+  const config = { agentKind: "gated-agent", customAgents: { "gated-agent": profile } };
+  assert.throws(() => resolveAgentKind(config), /Set allowCandidateAgents to true/);
+  assert.throws(() => resolveAgentAdapter(config, "gated-agent"), /Set allowCandidateAgents to true/);
+  assert.equal(resolveAgentKind({ ...config, allowCandidateAgents: true }), "gated-agent");
+  // A saved pane snapshot stays resolvable for recovery regardless of config.
+  const adapter = resolveAgentAdapter(config, "gated-agent", profile);
+  assert.equal(adapter.supportLevel, "user-provided-unverified");
+});
+
+test("savePaneEntry merges onto the latest state instead of clobbering other panes", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "herdr-state-merge-test-"));
+  try {
+    await saveState(dir, { panes: { "w1:p1": { agentKind: "codex", sandboxName: "herdr-codex-a" } } });
+    // Another process writes pane p2 while a long-running bridge holds p1.
+    await savePaneEntry(dir, "w1:p2", { agentKind: "opencode", sandboxName: "herdr-opencode-b" });
+    await savePaneEntry(dir, "w1:p1", { agentKind: "codex", sandboxName: "herdr-codex-a", lifecycleState: "prepared" });
+    const state = await loadState(dir);
+    assert.equal(state.panes["w1:p1"].lifecycleState, "prepared");
+    assert.equal(state.panes["w1:p2"].sandboxName, "herdr-opencode-b", "the concurrent pane mapping survives");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("nested cloud credentials and infrastructure state are sensitive paths", () => {
+  for (const file of [
+    ".config/gcloud/config.json", "nested/.config/gcloud/credentials.db",
+    "terraform/terraform.tfstate", "terraform.tfstate.backup", "env/prod.tfvars",
+  ]) assert.equal(isSensitivePath(file), true, file);
+  for (const file of ["docs/gcloud-setup.md", "terraform/main.tf"]) {
+    assert.equal(isSensitivePath(file), false, file);
+  }
+});
+
+test("content scanning recognizes common API token formats", () => {
+  const cases = [
+    ["OPENAI_API_KEY=sk-proj-fakefakefakefakefakefake", "api-secret-token"],
+    ["stripe: sk_live_fakefakefakefakefake", "stripe-live-key"],
+    ["glpat-fakefakefakefakefakefake", "gitlab-token"],
+    ["jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U", "jwt-token"],
+  ];
+  for (const [text, reason] of cases) {
+    assert.equal(sensitiveContentReason(text), reason, text);
+  }
+  assert.equal(sensitiveContentReason("const skill = 'sk-learning'"), null, "short sk- words are not tokens");
+});
+
+test("upload approvals expire after the review window", () => {
+  const digestValue = "d".repeat(64);
+  const now = Date.parse("2026-08-01T12:00:00.000Z");
+  const fresh = { digest: digestValue, reviewedAt: "2026-08-01T11:55:00.000Z" };
+  assert.equal(isUploadApprovalFresh(fresh, digestValue, now), true);
+  const expired = { digest: digestValue, reviewedAt: "2026-08-01T11:00:00.000Z" };
+  assert.equal(isUploadApprovalFresh(expired, digestValue, now), false);
+  assert.equal(isUploadApprovalFresh({ digest: "other", reviewedAt: "2026-08-01T11:59:00.000Z" }, digestValue, now), false);
+  assert.equal(isUploadApprovalFresh(undefined, digestValue, now), false);
 });
 
 test("sensitive upload overrides are exact per-file grants and cannot override Git ignores", async () => {

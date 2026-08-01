@@ -1,8 +1,8 @@
 id = "vercel.sandbox"
 name = "Vercel Sandbox"
-version = "0.3.0"
+version = "0.4.0"
 min_herdr_version = "0.7.5"
-description = "Run one verified coding agent per persistent Vercel Sandbox."
+description = "Run one coding-agent CLI per persistent Vercel Sandbox."
 platforms = ["linux", "macos"]
 
 [[actions]]

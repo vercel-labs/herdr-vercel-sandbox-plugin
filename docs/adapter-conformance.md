@@ -88,11 +88,19 @@ npm run check
 npm run verify:adapters
 ```
 
-The gate validates manifests, captures, quotes, receipts, hashes, adapters, state migration, bridge lifecycle and command dispatch. Its adversarial tests prove that fabricated claims do not promote an adapter.
+The gate validates manifests, captures, quotes, receipts, hashes, adapters, state migration, bridge lifecycle and command dispatch. Its adversarial tests prove that self-asserted proof labels, tampered artifacts, stale sources, and incomplete receipts do not promote an adapter. The gate is tamper-evident, not forgery-proof: an internally consistent set of operator-supplied artifacts passes, so promotion ultimately rests on capturing evidence with the harness as the run happens and on repository review of what was recorded.
 
 ## Live lifecycle gate
 
 Use `test/fixtures/basic-project` as the worktree and select the candidate `agentKind` with `allowCandidateAgents: true` only for this controlled run.
+
+Run the capture harness alongside the run so phase evidence is recorded as it happens instead of reconstructed afterwards:
+
+```bash
+node scripts/capture-lifecycle-run.mjs --pane-id <herdr-pane-id> --run-dir /tmp/conformance-run
+```
+
+The harness prompts once per phase, snapshots the plugin's recorded state, probes the remote fixture file and version where possible, and writes the run directory that `build-lifecycle-receipt.mjs` packages. Never paste tokens or one-time codes; the receipt builder rejects artifacts that look like secrets.
 
 1. Record the local Vercel CLI, Herdr, runtime, selected Sandbox target, network-policy context, pinned agent version, and start time.
 2. Start the agent through `vercel.sandbox.start-agent` and capture the exact installation/version output.

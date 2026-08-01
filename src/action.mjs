@@ -14,6 +14,7 @@ import {
   gitRoot,
   hasProjectTarget,
   inspectVercelAuthentication,
+  isUploadApprovalFresh,
   loadState,
   parseContext,
   readConfig,
@@ -21,9 +22,11 @@ import {
   run,
   sandboxArgs,
   sandboxCli,
+  savePaneEntry,
   saveState,
   shellQuote,
   stateForPane,
+  UPLOAD_APPROVAL_TTL_MS,
 } from "./lib.mjs";
 
 const actionId = process.env.HERDR_PLUGIN_ACTION_ID;
@@ -152,16 +155,21 @@ async function startAgent() {
   });
   const state = await loadState(stateDir);
   state.uploadApprovals ??= {};
+  for (const [key, approval] of Object.entries(state.uploadApprovals)) {
+    const reviewedAt = Date.parse(approval?.reviewedAt ?? "");
+    if (!Number.isFinite(reviewedAt) || Date.now() - reviewedAt > UPLOAD_APPROVAL_TTL_MS) {
+      delete state.uploadApprovals[key];
+    }
+  }
   const approvalKey = `${sourcePane}\0${root}\0${agentKind}`;
-  if (state.uploadApprovals[approvalKey]?.digest !== manifest.digest) {
+  if (!isUploadApprovalFresh(state.uploadApprovals[approvalKey], manifest.digest)) {
     state.uploadApprovals[approvalKey] = { digest: manifest.digest, reviewedAt: new Date().toISOString() };
     await saveState(stateDir, state);
     console.log(formatUploadManifest(manifest));
-    console.log("\nNo Sandbox was created. Review the complete manifest above, then invoke Start configured agent in a new Sandbox again to approve this exact file set.");
+    console.log(`\nNo Sandbox was created. Review the complete manifest above, then invoke Start configured agent in a new Sandbox again within ${UPLOAD_APPROVAL_TTL_MS / 60_000} minutes to approve this exact file set.`);
     notify("Review files before Sandbox upload", `${manifest.included.length} files are eligible and ${manifest.excluded.length} are excluded. Invoke Start again only if the complete terminal manifest is correct.`);
     return;
   }
-  delete state.uploadApprovals[approvalKey];
 
   const split = captureHerdr([
     "pane", "split", sourcePane, "--direction", "right", "--ratio", "0.5", "--cwd", cwd, "--focus",
@@ -169,9 +177,12 @@ async function startAgent() {
   const paneId = split?.result?.pane?.pane_id;
   if (!paneId) throw new Error(`Herdr did not return a pane id: ${JSON.stringify(split)}`);
 
-  state.version = 3;
-  state.panes ??= {};
-  state.panes[paneId] = createPaneStateEntry({
+  // Reload right before writing so the pane split's duration cannot clobber
+  // state written by another action in the meantime.
+  const latest = await loadState(stateDir);
+  if (latest.uploadApprovals) delete latest.uploadApprovals[approvalKey];
+  latest.panes ??= {};
+  latest.panes[paneId] = createPaneStateEntry({
     agentKind,
     adapterStatus: adapter.supportLevel === "built-in-lifecycle-verified" ? "verified" : "candidate",
     root,
@@ -182,10 +193,10 @@ async function startAgent() {
     vercelProject: config.project,
     agentProfile: adapter.profileSnapshot,
   });
-  state.panes[paneId].uploadManifestDigest = manifest.digest;
-  state.panes[paneId].uploadExclusions = [...(config.uploadExclusions ?? [])];
-  state.panes[paneId].uploadOverrides = [...(config.uploadOverrides ?? [])];
-  await saveState(stateDir, state);
+  latest.panes[paneId].uploadManifestDigest = manifest.digest;
+  latest.panes[paneId].uploadExclusions = [...(config.uploadExclusions ?? [])];
+  latest.panes[paneId].uploadOverrides = [...(config.uploadOverrides ?? [])];
+  await saveState(stateDir, latest);
 
   try {
     run(herdr, ["pane", "rename", paneId, `${adapter.title} · Vercel Sandbox`]);
@@ -211,7 +222,7 @@ async function replaceSandbox() {
 
   let { state, entry } = await stateForPane(stateDir, paneId);
   const confirmation = armOrConfirmDeletion(entry, "replace-sandbox");
-  await saveState(stateDir, state);
+  await savePaneEntry(stateDir, paneId, entry);
   if (!confirmation.confirmed) {
     const names = confirmation.sandboxNames.join(", ");
     notify(
@@ -249,8 +260,7 @@ async function replaceSandbox() {
   replacement.uploadExclusions = [...(entry.uploadExclusions ?? [])];
   replacement.uploadOverrides = [...(entry.uploadOverrides ?? [])];
   replacement.replacesSandboxNames = [...new Set([entry.sandboxName, ...(entry.replacesSandboxNames ?? [])])];
-  state.panes[paneId] = replacement;
-  await saveState(stateDir, state);
+  await savePaneEntry(stateDir, paneId, replacement);
 
   run(herdr, ["pane", "rename", paneId, `${adapter.title} · Vercel Sandbox`]);
   run(herdr, ["pane", "run", paneId, bridgeCommand("start", paneId, adapter)]);
@@ -266,32 +276,48 @@ async function forgetMapping() {
   if (context.focused_pane_agent) {
     throw new Error(`Exit ${context.focused_pane_agent} in pane ${paneId} before forgetting its mapping.`);
   }
-  let { state, entry } = await stateForPane(stateDir, paneId);
+  let { entry } = await stateForPane(stateDir, paneId);
+  // Pre-0.3.0 mappings have no saved team/project target, so their remote
+  // Sandboxes cannot be safely deleted through the CLI. Forgetting must still
+  // be possible; otherwise the mapping is stuck forever.
+  const hasTarget = Boolean(entry.vercelScope && entry.vercelProject);
   const confirmation = armOrConfirmDeletion(entry, "forget-mapping");
-  await saveState(stateDir, state);
+  await savePaneEntry(stateDir, paneId, entry);
   if (!confirmation.confirmed) {
     const names = confirmation.sandboxNames.join(", ");
-    notify(
-      "Confirm permanent Sandbox deletion",
-      `Invoke Delete Sandbox and forget mapping again within 60 seconds to permanently delete: ${names}`,
-    );
-    console.log(`No Sandbox was changed. Invoke Delete Sandbox and forget mapping again within 60 seconds to permanently delete ${names}.`);
+    const warning = hasTarget
+      ? `permanently delete: ${names}`
+      : `forget ${names} WITHOUT remote deletion (this legacy mapping has no saved Vercel team/project target)`;
+    notify("Confirm permanent Sandbox deletion", `Invoke Delete Sandbox and forget mapping again within 60 seconds to ${warning}`);
+    console.log(`No Sandbox was changed. Invoke Delete Sandbox and forget mapping again within 60 seconds to ${warning}.`);
     return;
   }
 
-  run(process.execPath, [
-    path.join(pluginRoot, "src", "bridge.mjs"), "delete",
-    "--state-dir", stateDir,
-    "--config-dir", configDir,
-    "--pane-id", paneId,
-  ]);
-  ({ entry } = await stateForPane(stateDir, paneId));
+  if (hasTarget) {
+    run(process.execPath, [
+      path.join(pluginRoot, "src", "bridge.mjs"), "delete",
+      "--state-dir", stateDir,
+      "--config-dir", configDir,
+      "--pane-id", paneId,
+    ]);
+    ({ entry } = await stateForPane(stateDir, paneId));
+    await forgetPaneState(stateDir, paneId);
+    notify(
+      "Vercel Sandbox permanently deleted",
+      `${entry.sandboxName} and its local pane mapping were deleted.`,
+    );
+    console.log(`Permanently deleted the tracked Sandbox and forgot the local mapping for ${entry.sandboxName}.`);
+    return;
+  }
+
   await forgetPaneState(stateDir, paneId);
-  notify(
-    "Vercel Sandbox permanently deleted",
-    `${entry.sandboxName} and its local pane mapping were deleted.`,
+  const names = confirmation.sandboxNames.join(", ");
+  notify("Sandbox mapping forgotten without remote deletion", `Check and remove manually if needed: ${names}`);
+  console.log(
+    `Forgot the local mapping for pane ${paneId}. No saved Vercel team/project target exists for this legacy mapping, `
+    + `so the plugin could not verify or delete the remote Sandbox(es): ${names}. `
+    + `If they still exist, remove them with "vercel sandbox remove <name>" in the owning team and project.`,
   );
-  console.log(`Permanently deleted the tracked Sandbox and forgot the local mapping for ${entry.sandboxName}.`);
 }
 
 async function runMapped(mode) {

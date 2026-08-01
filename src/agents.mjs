@@ -63,14 +63,28 @@ export function validateAgentAdapter(adapter) {
 
 export function registerAgentAdapter(adapter, options = {}) {
   validateAgentAdapter(adapter);
-  const verification = verifyAdapterEvidence(adapter, {
-    requiredChecks: REQUIRED_CONFORMANCE_CHECKS,
-    ...options,
-  });
   if (adapters.has(adapter.kind) || candidateAdapters.has(adapter.kind)) {
     throw new Error(`Agent adapter already registered: ${adapter.kind}`);
   }
-  const registered = Object.freeze({ ...adapter, supportLevel: verification.supportLevel });
+  // Evidence problems (missing records, stale documentation sources, changed
+  // hashes) demote the adapter to a non-selectable candidate. They must never
+  // fail registration itself: this module loads on every plugin action, and a
+  // user with a live Sandbox needs stop/delete/recovery to keep working even
+  // when adapter evidence has expired.
+  let verification;
+  try {
+    verification = verifyAdapterEvidence(adapter, {
+      requiredChecks: REQUIRED_CONFORMANCE_CHECKS,
+      ...options,
+    });
+  } catch (error) {
+    verification = { supportLevel: "evidence-invalid-candidate", evidenceError: error.message };
+  }
+  const registered = Object.freeze({
+    ...adapter,
+    supportLevel: verification.supportLevel,
+    ...(verification.evidenceError ? { evidenceError: verification.evidenceError } : {}),
+  });
   if (verification.supportLevel === "built-in-lifecycle-verified") adapters.set(adapter.kind, registered);
   else candidateAdapters.set(adapter.kind, registered);
   return registered;
@@ -83,10 +97,12 @@ registerAgentAdapter(claudeCodeAdapter);
 export function getAgentAdapter(kind, { allowCandidate = false } = {}) {
   const adapter = adapters.get(kind) ?? (allowCandidate ? candidateAdapters.get(kind) : undefined);
   if (!adapter) {
-    if (candidateAdapters.has(kind)) {
+    const candidate = candidateAdapters.get(kind);
+    if (candidate) {
+      const evidenceNote = candidate.evidenceError ? ` Its evidence is currently invalid: ${candidate.evidenceError}` : "";
       throw new Error(
-        `Agent kind ${kind} is a docs-confirmed candidate but has not passed the live Sandbox lifecycle. ` +
-        "Set allowCandidateAgents to true only while running its conformance test.",
+        `Agent kind ${kind} has not passed the live Sandbox lifecycle. ` +
+        `Set allowCandidateAgents to true only while running its conformance test.${evidenceNote}`,
       );
     }
     throw new Error(`Unsupported agent kind: ${kind}. No documented and tested adapter is registered.`);
@@ -164,19 +180,38 @@ export function customAgentAdapter(kind, profile) {
   });
 }
 
+function assertCustomAgentAllowed(config, kind) {
+  if (config.allowCandidateAgents !== true) {
+    throw new Error(
+      `Custom agent ${kind} is user-provided and unverified. ` +
+      "Set allowCandidateAgents to true in config.json to start it.",
+    );
+  }
+}
+
 export function resolveAgentAdapter(config = {}, kind = config.agentKind, profileSnapshot) {
   if (!kind) {
     const resolved = resolveAgentKind(config);
     return getAgentAdapter(resolved, { allowCandidate: config.allowCandidateAgents === true });
   }
-  const customProfile = profileSnapshot ?? config.customAgents?.[kind];
-  if (customProfile) return customAgentAdapter(kind, customProfile);
+  // A profile snapshot comes from a saved pane mapping: recovery and cleanup of
+  // an existing Sandbox stay possible regardless of the current config. A
+  // config-sourced profile is a fresh start and requires the explicit opt-in.
+  if (profileSnapshot) return customAgentAdapter(kind, profileSnapshot);
+  const customProfile = config.customAgents?.[kind];
+  if (customProfile) {
+    assertCustomAgentAllowed(config, kind);
+    return customAgentAdapter(kind, customProfile);
+  }
   return getAgentAdapter(kind, { allowCandidate: config.allowCandidateAgents === true });
 }
 
 export function resolveAgentKind(config = {}) {
   if (config.agentKind) {
-    if (config.customAgents?.[config.agentKind]) return config.agentKind;
+    if (config.customAgents?.[config.agentKind]) {
+      assertCustomAgentAllowed(config, config.agentKind);
+      return config.agentKind;
+    }
     return getAgentAdapter(config.agentKind, { allowCandidate: config.allowCandidateAgents === true }).kind;
   }
   const kinds = supportedAgentKinds();

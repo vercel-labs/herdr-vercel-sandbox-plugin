@@ -8,6 +8,7 @@ import { spawnSync } from "node:child_process";
 export const REMOTE_ROOT = "/vercel/sandbox/workspace";
 export const STATE_VERSION = 3;
 export const DELETION_CONFIRMATION_TTL_MS = 60_000;
+export const UPLOAD_APPROVAL_TTL_MS = 10 * 60_000;
 export const TERMINAL_RESTORE_SEQUENCE = [
   "\u001b[?1000l", // normal mouse tracking
   "\u001b[?1001l", // highlight mouse tracking
@@ -125,16 +126,19 @@ export function isSensitivePath(relativePath) {
   const basename = parts.at(-1)?.toLowerCase() ?? "";
   if ([".env.example", ".env.sample", ".env.template"].includes(basename)) return false;
   if (basename === ".env" || basename.startsWith(".env.")) return true;
+  const underGcloud = parts.some((part, index) => part === ".config" && parts[index + 1] === "gcloud")
+    || parts.includes("gcloud") && ["config.json", "credentials", "credentials.db", "access_tokens.db"].includes(basename);
   if ([
     ".npmrc", ".pypirc", ".yarnrc", ".yarnrc.yml", ".netrc",
     "auth.json", "credentials", "credentials.json", "service-account.json",
     "application_default_credentials.json", "config.json",
   ].includes(basename)) {
-    if (basename !== "config.json" || parts.some((part) => [".docker", ".config/gcloud"].includes(part))) return true;
+    if (basename !== "config.json" || parts.includes(".docker") || underGcloud) return true;
   }
   if (parts.includes(".ssh") || parts.includes(".gnupg") || parts.includes(".aws")) return true;
-  if (parts.includes(".docker") && basename === "config.json") return true;
+  if (underGcloud) return true;
   if (/\.(?:pem|key|p12|pfx|jks|keystore)$/i.test(basename)) return true;
+  if (/\.tfstate(?:\.backup)?$/i.test(basename) || /\.tfvars$/i.test(basename)) return true;
   if (/^(?:id_(?:rsa|dsa|ecdsa|ed25519)|.*\.kubeconfig)$/i.test(basename)) return true;
   return false;
 }
@@ -157,6 +161,10 @@ export function sensitiveContentReason(content, relativePath = "") {
   }
   if (/\/\/registry\.[^\s]+:_authToken\s*=\s*\S+/i.test(text)) return "package-registry-token";
   if (/\bprivate_key\s*[:=]\s*["']?-----BEGIN/i.test(text)) return "embedded-private-key";
+  if (/\bsk-[A-Za-z0-9_-]{20,}\b/.test(text)) return "api-secret-token";
+  if (/\bsk_live_[A-Za-z0-9]{16,}\b/.test(text)) return "stripe-live-key";
+  if (/\bglpat-[A-Za-z0-9_-]{20,}\b/.test(text)) return "gitlab-token";
+  if (/\beyJ[A-Za-z0-9_-]{20,}\.eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}\b/.test(text)) return "jwt-token";
   return null;
 }
 
@@ -170,6 +178,56 @@ function matchesConfiguredExclusion(relativePath, patterns = []) {
     if (normalizedPattern.startsWith("*.")) return normalized.endsWith(normalizedPattern.slice(1));
     return normalized === normalizedPattern;
   });
+}
+
+// The supported exclusion dialect is deliberately small: an exact
+// repository-relative path, a directory prefix ("dir/" or "dir/**"),
+// or an extension ("*.ext"). Anything else must fail loudly instead of
+// silently matching nothing.
+export function validateExclusionPattern(pattern) {
+  if (typeof pattern !== "string" || pattern.length === 0) {
+    throw new Error("uploadExcludes entries must be non-empty strings.");
+  }
+  const normalized = pattern.replaceAll("\\", "/").replace(/^\.\//, "");
+  if (/[?[\]]/.test(normalized)) {
+    throw new Error(`uploadExcludes pattern "${pattern}" is unsupported. Use an exact path, "dir/", "dir/**", or "*.ext".`);
+  }
+  if (normalized.endsWith("/**")) {
+    if (normalized.slice(0, -3).includes("*")) {
+      throw new Error(`uploadExcludes pattern "${pattern}" is unsupported: "**" may only end a directory pattern.`);
+    }
+    return;
+  }
+  if (normalized.startsWith("*.")) {
+    if (normalized.slice(2).includes("*") || normalized.includes("/")) {
+      throw new Error(`uploadExcludes pattern "${pattern}" is unsupported. "*.ext" may not contain further wildcards or slashes.`);
+    }
+    return;
+  }
+  if (normalized.includes("*")) {
+    throw new Error(`uploadExcludes pattern "${pattern}" is unsupported. Use an exact path, "dir/", "dir/**", or "*.ext".`);
+  }
+}
+
+// Sensitive-file overrides are exact per-file grants. Globs are rejected so a
+// single config line can never quietly re-include a class of credentials.
+export function validateOverridePath(override) {
+  if (typeof override !== "string" || override.length === 0) {
+    throw new Error("sensitiveFileOverrides entries must be non-empty strings.");
+  }
+  if (/[*?[\]]/.test(override)) {
+    throw new Error(`sensitiveFileOverrides entry "${override}" is rejected: overrides must be exact repository-relative paths, not globs.`);
+  }
+  if (override.endsWith("/")) {
+    throw new Error(`sensitiveFileOverrides entry "${override}" is rejected: overrides must name a single file, not a directory.`);
+  }
+}
+
+export function isUploadApprovalFresh(approval, digest, now = Date.now()) {
+  if (!approval || approval.digest !== digest) return false;
+  const reviewedAt = Date.parse(approval.reviewedAt ?? "");
+  if (!Number.isFinite(reviewedAt)) return false;
+  return now >= reviewedAt && now - reviewedAt <= UPLOAD_APPROVAL_TTL_MS;
 }
 
 export function run(command, args, options = {}) {
@@ -208,16 +266,29 @@ export function listWorkspaceFiles(root) {
   return result.stdout.split("\0").filter(Boolean);
 }
 
+export function gitIgnoredSet(root, files) {
+  if (files.length === 0) return new Set();
+  const result = spawnSync(
+    "git",
+    ["-C", root, "check-ignore", "--no-index", "-z", "--stdin"],
+    { input: `${files.join("\0")}\0`, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+  );
+  if (result.error) throw result.error;
+  // check-ignore exits 1 when no path is ignored; anything above 1 is a real error.
+  if (result.status !== 0 && result.status !== 1) {
+    throw new Error(`git check-ignore failed with status ${result.status}\n${result.stderr}`);
+  }
+  return new Set(result.stdout.split("\0").filter(Boolean));
+}
+
 export async function buildUploadManifest(root, options = {}) {
   const overrides = new Set(options.overrides ?? []);
   const records = [];
-  for (const file of listWorkspaceFiles(root)) {
+  const files = listWorkspaceFiles(root);
+  const ignoredFiles = gitIgnoredSet(root, files);
+  for (const file of files) {
     const absolute = path.join(root, file);
-    const ignored = run("git", ["-C", root, "check-ignore", "--no-index", "-q", "--", file], {
-      capture: true,
-      allowFailure: true,
-    }).status === 0;
-    let reason = ignored ? "git-ignored" : null;
+    let reason = ignoredFiles.has(file) ? "git-ignored" : null;
     let overridable = false;
     if (!reason && isSensitivePath(file)) {
       reason = "sensitive-path";
@@ -279,8 +350,10 @@ export async function createWorkspaceArchive(root, options = {}) {
   const dir = await mkdtemp(path.join(tmpdir(), "herdr-sandbox-"));
   const listPath = path.join(dir, "files.txt");
   const archivePath = path.join(dir, "workspace.tar.gz");
-  await writeFile(listPath, files.map((file) => `./${file}`).join("\n") + "\n", "utf8");
-  run("tar", ["-czf", archivePath, "-C", root, "-T", listPath], {
+  // NUL-separated file list: keeps GNU tar from reinterpreting quotes or
+  // backslashes in filenames, so only the approved paths can enter the archive.
+  await writeFile(listPath, files.map((file) => `./${file}`).join("\0") + "\0", "utf8");
+  run("tar", ["-czf", archivePath, "-C", root, "--null", "-T", listPath], {
     env: { ...process.env, COPYFILE_DISABLE: "1" },
   });
   return {
@@ -291,17 +364,41 @@ export async function createWorkspaceArchive(root, options = {}) {
   };
 }
 
+// Documented user-facing keys plus accepted legacy spellings. Anything else is
+// rejected: a silently ignored key in this file can mean an unintended upload.
+const CONFIG_KEYS = new Set([
+  "agentKind", "agentArgs", "allowCandidateAgents", "customAgents",
+  "runtime", "timeout", "scope", "project", "projectConfigPath", "vercelBin",
+  "uploadExcludes", "sensitiveFileOverrides",
+  "uploadExclusions", "uploadOverrides",
+]);
+
 export async function readConfig(configDir) {
   const configPath = path.join(configDir, "config.json");
   if (!existsSync(configPath)) return {};
   const config = JSON.parse(await readFile(configPath, "utf8"));
+  const unknown = Object.keys(config).filter((key) => !CONFIG_KEYS.has(key));
+  if (unknown.length > 0) {
+    throw new Error(`config.json has unsupported key(s): ${unknown.join(", ")}. Supported keys: ${[...CONFIG_KEYS].join(", ")}.`);
+  }
+  for (const [documented, legacy] of [["uploadExcludes", "uploadExclusions"], ["sensitiveFileOverrides", "uploadOverrides"]]) {
+    if (config[documented] !== undefined && config[legacy] !== undefined) {
+      throw new Error(`config.json sets both ${documented} and ${legacy}; keep only ${documented}.`);
+    }
+    if (config[documented] !== undefined) {
+      config[legacy] = config[documented];
+      delete config[documented];
+    }
+  }
   if (config.projectConfigPath) {
     const linked = JSON.parse(await readFile(config.projectConfigPath, "utf8"));
     config.scope ??= linked.orgId;
     config.project ??= linked.projectId;
   }
-  if (config.agentKind !== undefined && typeof config.agentKind !== "string") {
-    throw new Error("config.json agentKind must be a string");
+  for (const field of ["agentKind", "runtime", "timeout", "vercelBin", "projectConfigPath"]) {
+    if (config[field] !== undefined && typeof config[field] !== "string") {
+      throw new Error(`config.json ${field} must be a string`);
+    }
   }
   if (config.allowCandidateAgents !== undefined && typeof config.allowCandidateAgents !== "boolean") {
     throw new Error("config.json allowCandidateAgents must be a boolean");
@@ -326,10 +423,13 @@ export async function readConfig(configDir) {
       }
     }
   }
-  for (const field of ["uploadExclusions", "uploadOverrides"]) {
-    if (config[field] !== undefined && (!Array.isArray(config[field]) || config[field].some((value) => typeof value !== "string"))) {
-      throw new Error(`config.json ${field} must be an array of exact paths or supported exclusion patterns`);
-    }
+  if (config.uploadExclusions !== undefined) {
+    if (!Array.isArray(config.uploadExclusions)) throw new Error("config.json uploadExcludes must be an array of patterns");
+    for (const pattern of config.uploadExclusions) validateExclusionPattern(pattern);
+  }
+  if (config.uploadOverrides !== undefined) {
+    if (!Array.isArray(config.uploadOverrides)) throw new Error("config.json sensitiveFileOverrides must be an array of exact paths");
+    for (const override of config.uploadOverrides) validateOverridePath(override);
   }
   return config;
 }
@@ -427,10 +527,10 @@ export function classifySandboxExecFailure(result) {
   if (/forbidden|permission|access denied|status code:\s*403/i.test(output)) {
     return { kind: "permission", output };
   }
-  if (/project|scope|team/i.test(output)) return { kind: "target", output };
   if (/network|ECONN|ENOTFOUND|ETIMEDOUT|fetch failed|socket|TLS/i.test(output)) {
     return { kind: "network", output };
   }
+  if (/project|scope|team/i.test(output)) return { kind: "target", output };
   return { kind: "unknown", output };
 }
 
@@ -460,6 +560,17 @@ export async function saveState(stateDir, state) {
   const tempPath = `${statePath}.${process.pid}.tmp`;
   await writeFile(tempPath, `${JSON.stringify(state, null, 2)}\n`, { mode: 0o600 });
   await rename(tempPath, statePath);
+}
+
+// Re-reads the state file and replaces only the given pane's entry, so a
+// long-running operation (a multi-minute prepare) cannot clobber mappings
+// other processes wrote in the meantime.
+export async function savePaneEntry(stateDir, paneId, entry) {
+  const state = await loadState(stateDir);
+  state.panes ??= {};
+  state.panes[paneId] = entry;
+  await saveState(stateDir, state);
+  return state;
 }
 
 export async function stateForPane(stateDir, paneId) {

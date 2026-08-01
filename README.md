@@ -1,6 +1,6 @@
 # Vercel Sandbox for Herdr
 
-Run one lifecycle-verified coding-agent CLI per persistent Vercel Sandbox while keeping Herdr as the local terminal and attention-management surface. Built-in adapters remain unavailable for normal starts until their pinned version has a repository-verifiable lifecycle receipt.
+Run one coding-agent CLI per persistent Vercel Sandbox while keeping Herdr as the local terminal and attention-management surface. Codex, OpenCode, and Claude Code ship as built-in adapters; all three are currently docs-confirmed candidates and require an explicit opt-in until a pinned version has a repository-verifiable lifecycle receipt.
 
 ## mental model
 
@@ -8,9 +8,9 @@ Herdr remains the local control room. The agent pane is a local terminal connect
 
 Herdr does not inspect the microVM directly. The local wrapper sets `HERDR_AGENT=<agent-kind>`, which lets Herdr use that agent's screen definitions to classify the visible terminal as working, waiting, or finished. The plugin separately records which Herdr pane maps to which named Sandbox.
 
-You can start a Sandbox at any point in an existing Herdr session. Focus a pane whose current directory is inside a Git worktree and invoke **Start configured agent in a new Sandbox**. The plugin splits that pane, prepares a new Sandbox, and launches the configured agent there. It does not have to run when the terminal or Herdr first starts.
+You can start a Sandbox at any point in an existing Herdr session. Focus a pane whose current directory is inside a Git worktree and invoke **Start configured agent in a new Sandbox**. The plugin splits that pane, prepares a new Sandbox, and launches the configured agent there.
 
-Starting is currently an explicit Herdr action. Typing “start a Sandbox” into an unrelated agent does not call the action automatically; that would require exposing the action to the agent as a tool in a later integration.
+Starting is an explicit Herdr action. Typing "start a Sandbox" into an unrelated agent does not call the action; that would require exposing the action to the agent as a tool in a later integration.
 
 ## requirements
 
@@ -18,7 +18,7 @@ Starting is currently an explicit Herdr action. Typing “start a Sandbox” int
 - Herdr 0.7.5 or newer
 - Node.js 20 or newer
 - Git
-- Vercel CLI 54.15.1 or newer, which includes `vercel sandbox`
+- Vercel CLI 56.2.0 or newer (every CLI behavior this plugin depends on was verified against 56.2.0)
 - A Vercel account with access to the team and project that should own the Sandbox
 - A Vercel-linked Git worktree, or explicit `scope` and `project` configuration
 
@@ -39,7 +39,7 @@ You can also invoke **Start configured agent in a new Sandbox** immediately. Sta
 1. It runs `vercel whoami --format json` to check for a confirmed local Vercel session. If signed out, it opens a local **Connect Vercel account** pane running the official interactive login flow.
 2. It looks for `.vercel/project.json` in the focused Git worktree. If the worktree is not linked, it opens a local **Link Vercel project** pane running the official interactive project-linking flow.
 
-Finish the prompted flow, close or leave the setup pane, return to the original worktree pane, and invoke Start again. Neither onboarding branch creates a Sandbox or writes a pane-to-Sandbox mapping. Network, permissions, and unexpected CLI failures are shown as errors instead of being misclassified as “signed out.”
+Finish the prompted flow, return to the original worktree pane, and invoke Start again. Neither onboarding branch creates a Sandbox or writes a pane-to-Sandbox mapping. Network, permission, and unexpected CLI failures are shown as errors instead of being misclassified as "signed out."
 
 Use the Vercel account that can access the intended team and project. The plugin cannot bypass Vercel permissions. If the setup pane shows the wrong account, run `vercel logout`, invoke **Connect Vercel account**, and authenticate with the intended account.
 
@@ -61,7 +61,7 @@ The CLI prompts for the team and existing project, then creates `.vercel/project
 3. Run `vercel login`, confirm the account with `vercel whoami`, and finish `vercel link` from the worktree.
 4. Install the Herdr plugin as described below and invoke Start again.
 
-New users create a Vercel account first. The official link flow then allows the user to select an accessible project or create one. The login and linking screens belong to Vercel CLI; the plugin only opens them in a local Herdr pane and verifies the result. Linking selects the Vercel team/project for Sandbox operations. It is separate from authenticating Codex, OpenCode, or another coding agent inside the Sandbox.
+The login and linking screens belong to Vercel CLI; the plugin only opens them in a local Herdr pane and verifies the result. Linking selects the Vercel team/project for Sandbox operations. It is separate from authenticating Codex, OpenCode, or another coding agent inside the Sandbox.
 
 ## local installation
 
@@ -129,8 +129,6 @@ command = "vercel.sandbox.forget-mapping"
 description = "confirm, permanently delete, and forget this Sandbox"
 ```
 
-Focus a Herdr pane in a Git worktree and press your prefix followed by `Shift+S`. The plugin resolves the configured adapter, verifies its evidence status, previews a filtered worktree snapshot, installs that agent, and launches it inside the Sandbox. A docs-confirmed candidate can be exercised only when `allowCandidateAgents` is explicitly enabled for a conformance run.
-
 ### How a shortcut becomes a Sandbox command
 
 The plugin defines named actions; the Herdr config above chooses which keys invoke them. The shortcut itself is not sent to Vercel.
@@ -149,13 +147,19 @@ Herdr keybinding
   -> vercel sandbox exec --interactive attaches the remote agent to the new Herdr pane
 ```
 
-The other actions use the same route. Reconnect invokes interactive `sandbox exec`; apply uses `sandbox exec` and `sandbox copy`; stop invokes `sandbox stop`; and confirmed replace/delete invokes `sandbox remove`. Herdr supplies the action ID and focused-pane metadata to the plugin, while the locally authenticated Vercel CLI performs the actual account-scoped Sandbox operations.
+The other actions use the same route. Reconnect invokes interactive `sandbox exec`; apply uses `sandbox exec` and `sandbox copy`; stop invokes `sandbox stop` and reads the CLI's actual output rather than trusting its exit code; and confirmed replace/delete invokes `sandbox remove`. Herdr supplies the action ID and focused-pane metadata to the plugin, while the locally authenticated Vercel CLI performs the actual account-scoped Sandbox operations.
 
-These example shortcuts are user configuration, not hardcoded requirements. They can be changed without changing the plugin, and another future Herdr surface could invoke the same action IDs.
+These example shortcuts are user configuration, not hardcoded requirements. They can be changed without changing the plugin.
 
-Before the first upload, the plugin prints the complete eligible-file manifest and a digest. Start must be invoked a second time with the same manifest within 60 seconds to approve it. Candidates include tracked and untracked files, but every Git-ignored path is excluded even if it remains tracked. The filter also excludes `.git`, `.vercel`, dependency trees, environment secrets, high-confidence credential names and extensions, and files whose contents match private keys or recognizable credential formats. Ordinary source files and `.env.example` remain eligible.
+## upload manifest and approval
 
-`uploadExcludes` adds user-defined glob exclusions. `sensitiveFileOverrides` can re-include only an exact normally-sensitive path and therefore requires deliberate per-file configuration; broad override globs are rejected. Intentional service authentication is separate from workspace upload and should use narrowly scoped, short-lived credentials created inside the Sandbox.
+Before the first upload, the plugin prints the complete eligible-file manifest and a digest. Invoke Start again within 10 minutes with the workspace unchanged to approve exactly that file set; if any file changed, a new manifest is printed for review instead.
+
+Candidates include tracked and untracked files, but every Git-ignored path is excluded even if it remains tracked. The filter also excludes `.git`, `.vercel`, dependency trees, environment secrets, high-confidence credential names and extensions (including nested `.ssh`, `.aws`, `.docker`, and gcloud configuration, Terraform state, and key or certificate files), and files whose contents match recognizable credential formats (private keys, AWS/GitHub/GitLab/Slack/Stripe/OpenAI-style tokens, JWTs, netrc and registry credentials). Ordinary source files and `.env.example` remain eligible.
+
+`uploadExcludes` adds user-defined exclusions. The supported patterns are exactly: an exact repository-relative path, a directory prefix (`dir/` or `dir/**`), or an extension (`*.ext`). Any other pattern is rejected with an error when the config loads, never silently ignored.
+
+`sensitiveFileOverrides` re-includes a normally-sensitive file and accepts only exact repository-relative file paths. Globs and directory entries are rejected. Intentional service authentication is separate from workspace upload and should use narrowly scoped, short-lived credentials created inside the Sandbox.
 
 ## configuration
 
@@ -165,11 +169,12 @@ Find the Herdr-managed config directory:
 herdr plugin config-dir vercel.sandbox
 ```
 
-Create `config.json` there:
+Create `config.json` there. This example is complete and working as written:
 
 ```json
 {
   "agentKind": "codex",
+  "allowCandidateAgents": true,
   "agentArgs": {
     "codex": []
   },
@@ -180,31 +185,37 @@ Create `config.json` there:
 }
 ```
 
-The built-in adapter candidates are Codex `0.146.0`, OpenCode `1.18.9`, and Claude Code `2.1.220`. Built-in means no adapter code is required; it does not mean the current pin is lifecycle-verified. `agentKind` selects one adapter and only that agent is installed in its Sandbox. By default, the plugin reads the `orgId` and `projectId` generated by `vercel link` from the focused worktree's `.vercel/project.json`. Advanced users may set `scope` and `project` together to target a project explicitly. The legacy `projectConfigPath` option is also supported.
+Unknown keys in `config.json` are rejected with an error listing the supported keys, so a typo can never silently disable a safety setting.
 
-For a controlled conformance run only, add `"allowCandidateAgents": true`. Do not use that flag as a support claim.
+The built-in adapter candidates are Codex `0.146.0`, OpenCode `1.18.9`, and Claude Code `2.1.220`. Built-in means no adapter code is required; it does not mean the current pin is lifecycle-verified, which is why the example above sets `allowCandidateAgents`. `agentKind` selects one adapter and only that agent is installed in its Sandbox. By default, the plugin reads the `orgId` and `projectId` generated by `vercel link` from the focused worktree's `.vercel/project.json`. Advanced users may set `scope` and `project` together to target a project explicitly. The `projectConfigPath` option points at an existing `.vercel/project.json` outside the worktree.
 
-Custom terminal agents use a validated declarative profile rather than importing a host-side JavaScript module:
+Do not put tokens in this file. Agent authentication happens inside its persistent Sandbox; this plugin does not copy coding-agent credentials from the host.
+
+### custom agents
+
+Custom terminal agents use a validated declarative profile rather than importing a host-side JavaScript module. All nine fields shown are required, `customAgents` is an object keyed by agent kind, and starting a custom agent requires `allowCandidateAgents`:
 
 ```json
 {
   "agentKind": "my-agent",
   "allowCandidateAgents": true,
-  "customAgents": [{
-    "kind": "my-agent",
-    "title": "My Agent",
-    "installCommand": "npm install --prefix /vercel/sandbox/herdr-tools my-agent@1.2.3",
-    "launchCommand": "/vercel/sandbox/herdr-tools/node_modules/.bin/my-agent",
-    "versionCommand": "/vercel/sandbox/herdr-tools/node_modules/.bin/my-agent --version",
-    "authMode": "device-code",
-    "herdrDetectionKind": "generic"
-  }]
+  "customAgents": {
+    "my-agent": {
+      "title": "My Agent",
+      "installationCommand": "npm install --prefix /vercel/sandbox/.herdr-tools my-agent@1.2.3",
+      "launchCommand": "/vercel/sandbox/.herdr-tools/node_modules/.bin/my-agent",
+      "versionCommand": "/vercel/sandbox/.herdr-tools/node_modules/.bin/my-agent --version",
+      "expectedVersion": "1.2.3",
+      "authenticationMode": "device-code",
+      "herdrDetectionIdentifier": "generic",
+      "interactiveTTY": true,
+      "resumeSupported": true
+    }
+  }
 }
 ```
 
-Custom commands execute inside the Sandbox and are clearly unverified. The plugin does not import arbitrary `.mjs` profiles on the host because importing one would execute code on the user's laptop. API-only and hosted harnesses need a runner or a different integration shape before they can satisfy this terminal lifecycle contract.
-
-Do not put tokens in this file. Agent authentication happens inside its persistent Sandbox; this plugin does not copy coding-agent credentials from the host.
+Custom commands execute inside the Sandbox and are always labeled unverified. The plugin does not import arbitrary `.mjs` profiles on the host because importing one would execute code on the user's laptop. API-only and hosted harnesses need a runner or a different integration shape before they can satisfy this terminal lifecycle contract.
 
 ## lifecycle actions
 
@@ -212,11 +223,11 @@ Do not put tokens in this file. Agent authentication happens inside its persiste
 - **Link this worktree to a Vercel project** opens the official Vercel CLI link flow in a local Herdr pane and verifies `.vercel/project.json`. It never creates a Sandbox.
 - **Start configured agent in a new Sandbox** verifies target access, records a provisional mapping, and creates one persistent Sandbox with `sandbox create --name`. State advances through `provisional`, `creating`, `created`, `prepared`, and `ready`. If Herdr cannot launch the bridge, a merely provisional mapping is removed. If remote creation succeeded but later setup failed, the mapping is retained with a retry/delete recovery path so the Sandbox is not orphaned.
 - **Reconnect agent to this Sandbox** resumes the registered agent in the mapped Sandbox and confirms that reconnection has started.
-- **Apply Sandbox changes locally** exports changes since the remote baseline and applies them only after `git apply --check` passes.
-- **Stop this Sandbox** stops compute while preserving its filesystem and shows a Herdr confirmation toast.
+- **Apply Sandbox changes locally** is repeatable and incremental. Each apply exports only the changes since the last applied snapshot, checks them with `git apply --check`, and applies them only if the check passes. After a successful apply the snapshot marker advances, so the next apply brings over only newer work. Applying the same changes twice reports "already present locally" instead of failing.
+- **Stop this Sandbox** stops compute while preserving its filesystem. The plugin reads the CLI's real output; a failed stop is reported as a failure, never as success.
 - **Show Sandbox mapping** prints the agent kind, installed version, capabilities, and pane-to-Sandbox mapping.
 - **Replace this Sandbox** is a destructive, two-step action. The first invocation lists and arms deletion of every Sandbox tracked by the mapping. Invoke it again within 60 seconds to permanently delete those Sandboxes and start a fresh replacement.
-- **Delete Sandbox and forget mapping** uses the same two-step confirmation, permanently deletes every Sandbox tracked by the mapping, and only then removes local pane state.
+- **Delete Sandbox and forget mapping** uses the same two-step confirmation, permanently deletes every Sandbox tracked by the mapping, and only then removes local pane state. A legacy mapping without a saved team/project target can still be forgotten after the same confirmation; the plugin then lists the names it could not delete remotely so you can remove them manually.
 
 Permanent deletion is explicit and never part of stop, reconnect, or normal agent exit. A single Replace/Delete invocation changes nothing. If deletion partly fails, the plugin records each successful deletion before stopping, retains the mapping, and lets the user retry only the remaining names.
 
@@ -226,9 +237,9 @@ The initial upload is a filtered snapshot, not a live filesystem mount. It exclu
 
 The Sandbox bridge is shared. Each supported CLI contributes a small adapter containing its installation script, authentication and launch behavior, version command, capability declaration, and evidence for seven required checks.
 
-An adapter becomes normally selectable only after installation, remote authentication, interactive launch, TTY behavior, credential persistence, Herdr detection, and Sandbox runtime compatibility are confirmed by independently validated artifacts. See [agent conformance](docs/adapter-conformance.md).
+An adapter becomes normally selectable only after installation, remote authentication, interactive launch, TTY behavior, credential persistence, Herdr detection, and Sandbox runtime compatibility are confirmed by validated artifacts. Evidence problems (missing records, stale documentation sources, changed hashes) demote an adapter to a non-selectable candidate; they never prevent the plugin from loading, so stop, delete, and recovery keep working for existing Sandboxes. See [agent conformance](docs/adapter-conformance.md).
 
-Codex, OpenCode, and Claude Code are built-in docs-confirmed candidates. Historical Codex and OpenCode runs are useful narrative evidence, but they predate the deterministic receipt format and therefore do not currently promote either adapter. See the [Codex record](docs/live-verification.md) and [OpenCode record](docs/opencode-live-verification.md).
+Codex, OpenCode, and Claude Code are built-in docs-confirmed candidates. All three have completed the full lifecycle in live Sandboxes as recorded operator observations; none of those runs retained the raw artifacts the deterministic receipt format requires, so none is promoted yet. See the [Codex record](docs/live-verification.md), the [OpenCode record](docs/opencode-live-verification.md), and the [Claude Code record](docs/claude-live-verification.md).
 
 ## planned public installation
 
@@ -245,8 +256,9 @@ The repository is not published by this local change. See [releasing](docs/relea
 ```bash
 npm run check
 npm run verify:adapters
+npm run verify:sources:remote
 ```
 
-For a new adapter, run the fixture lifecycle in [agent conformance](docs/adapter-conformance.md): install, authenticate, create the expected remote file, apply it locally, stop, resume, and confirm both the file and credential persist.
+`npm run check` runs syntax, unit, schema, migration, dispatch, bridge lifecycle, docs-example parity, and local adapter evidence checks. `verify:sources:remote` fetches every authoritative source document, compares its bytes with the recorded SHA-256, and confirms each exact quote still appears in the live upstream content. Source captures are the raw fetched bytes of those documents, so a quote can only verify against what the vendor actually published.
 
-See [verification](docs/verification.md) for the machine gate and the historical live records for context. A behavior claim is not marked verified unless its canonical source capture, exact quotes, raw lifecycle artifacts, hashes, pinned agent version, and validated receipt are present in this repository.
+For a new adapter, run the fixture lifecycle in [agent conformance](docs/adapter-conformance.md): install, authenticate, create the expected remote file, apply it locally, stop, resume, and confirm both the file and credential persist. A behavior claim is not marked verified unless its canonical source capture, exact quotes, raw lifecycle artifacts, hashes, pinned agent version, and validated receipt are present in this repository.

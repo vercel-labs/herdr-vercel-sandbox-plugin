@@ -35,7 +35,7 @@ Clean-profile verification completed on 2026-07-31 with Herdr 0.7.5. With isolat
 
 - [x] Canonical target selected: `vercel-labs/herdr-vercel-sandbox-plugin`.
 - [x] GitHub installation and Herdr marketplace discovery steps are documented.
-- [x] Versioning begins at `0.2.0`; deletion ships as `0.2.1`, account/project onboarding as `0.3.0`, and the plugin follows pre-1.0 semantic versioning.
+- [x] Versioning begins at `0.2.0`; deletion ships as `0.2.1`, account/project onboarding as `0.3.0`, the 2026-08-01 review fixes (config contract, evidence demotion, output-checked stop, incremental apply, custom-agent gate, docs regenerated from code with parity tests) as `0.4.0`, and the plugin follows pre-1.0 semantic versioning.
 - [ ] Repository created under `vercel-labs`.
 - [ ] License and repository governance confirmed by the owning team.
 - [ ] Repository topic `herdr-plugin` added and marketplace listing observed.

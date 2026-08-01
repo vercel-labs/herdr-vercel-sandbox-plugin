@@ -16,12 +16,12 @@ Herdr plugin v1 requires actions to be declared in `herdr-plugin.toml`; runtime 
 4. Only after both gates pass does the plugin run a read-only target-access check, save a `provisional` mapping, and ask Herdr to split the focused pane. A failed pane launch removes that provisional mapping.
 5. The new pane runs a local wrapper with `HERDR_AGENT` set from `capabilities.herdrDetectionKind`.
 6. The wrapper advances state to `creating`, creates a named Sandbox with `sandbox create --name`, and immediately records `remoteCreated: true` and `created`. Later setup failures retain the mapping.
-7. The plugin prints a complete upload manifest and digest before the first transfer. A second matching invocation approves it; custom exclusions and exact sensitive-path overrides are applied before the archive is built.
+7. The plugin prints a complete upload manifest and digest before the first transfer. A second matching invocation within 10 minutes approves it; custom exclusions and exact sensitive-path overrides are applied before the archive is built, and the digest is re-verified at archive time.
 8. The bridge initializes a remote Git baseline, records `prepared`, and runs the adapter installation script.
 9. The bridge runs the adapter version command, requires the pinned version, records it, and advances to `ready`.
 10. The adapter launches through `vercel sandbox exec --interactive`.
-11. Apply exports a binary Git patch and applies it only after `git apply --check` succeeds.
-12. Stop ends compute while preserving the mapped Sandbox filesystem. Reconnect addresses the existing name with `sandbox exec`, which resumes the persistent Sandbox. A mapped not-found result is a recovery state, never implicit replacement.
+11. Apply is incremental. Each export snapshots the Sandbox tree as a tagged commit and diffs it against the last snapshot this worktree actually received (recorded in local pane state, which re-syncs the remote baseline at the start of every apply). The patch applies only after `git apply --check` succeeds; a patch that is already present locally is detected with a reverse check and advances the marker without touching files.
+12. Stop ends compute while preserving the mapped Sandbox filesystem. The bridge reads the CLI's captured output because `vercel sandbox stop` can exit 0 on failure (measured on CLI 56.2.0); a failed stop is classified and reported, never recorded as stopped. Reconnect addresses the existing name with `sandbox exec`, which resumes the persistent Sandbox. A mapped not-found result is a recovery state, never implicit replacement.
 13. Replace and delete-and-forget require the same action twice within 60 seconds. After confirmation, the bridge permanently removes tracked Sandboxes sequentially and checkpoints each result before replacing or forgetting local state.
 
 ## adapter registration
@@ -39,11 +39,11 @@ Registration fails closed unless the adapter declares:
 - `capabilities.herdrDetectionKind`
 - independently validated source claims and a version-specific executable lifecycle receipt for all seven phases
 
-Adding an object to the registry does not by itself establish support. The live fixture lifecycle must pass and be recorded before registration.
+Adding an object to the registry does not by itself establish support. Evidence problems (a missing record, stale documentation sources, changed hashes) demote the adapter to a non-selectable candidate with a recorded evidence error; they never fail module loading, because stop, delete, and recovery for existing Sandboxes depend on this module importing successfully. Promotion to normal selectability still requires complete, valid evidence.
 
 ## state schema
 
-New pane mappings use schema version 2:
+New pane mappings use schema version 3:
 
 ```json
 {
@@ -58,16 +58,18 @@ New pane mappings use schema version 2:
   "lifecycleState": "ready",
   "remoteCreated": true,
   "prepared": true,
+  "uploadManifestDigest": "…",
+  "lastAppliedExportCommit": "…",
   "installedVersion": "codex-cli 0.146.0",
   "capabilities": {}
 }
 ```
 
-Version 1 entries migrate from `agent` to `agentKind` when loaded.
+Version 1 entries migrate from `agent` to `agentKind` when loaded. State writes replace only the owning pane's entry against a freshly read file, so concurrent actions on different panes cannot clobber each other.
 
 ## safety boundaries
 
-- Every candidate path is checked with `git check-ignore --no-index`, including tracked files. `.env*`, `.vercel`, `.git`, dependency trees, high-confidence credential paths/extensions, content-matched secrets, and user-configured exclusions are not uploaded. Environment-file examples remain eligible. The complete eligible manifest must be approved before first upload; a sensitive file requires an exact per-file override.
+- Every candidate path is checked with `git check-ignore --no-index`, including tracked files. `.env*`, `.vercel`, `.git`, dependency trees, high-confidence credential paths/extensions (including nested gcloud configuration and Terraform state), content-matched secrets, and user-configured exclusions are not uploaded. Environment-file examples remain eligible. The complete eligible manifest must be approved before first upload within a 10-minute window; a sensitive file requires an exact per-file override, and unsupported exclusion patterns or override globs are rejected at config load. Unknown config keys are rejected so a typo cannot silently disable a safety setting.
 - The local worktree is never mounted into the remote process.
 - Agent credentials are created inside the Sandbox and are never copied from the host.
 - Vercel account and project onboarding runs locally through the official Vercel CLI. Missing prerequisites cannot create a Sandbox or pane mapping.

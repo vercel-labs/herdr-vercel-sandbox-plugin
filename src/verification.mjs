@@ -56,6 +56,16 @@ export async function verifyRemoteSourceFreshness(manifest, options = {}) {
       if (sha256(body) !== source.freshness?.upstreamSha256) {
         throw new Error(`Remote source content changed for ${verificationId}:${index}.`);
       }
+      // The exact quote must appear in the live upstream document, not only in
+      // the locally stored capture. This ties every claim to what the vendor
+      // actually publishes right now.
+      const upstreamText = body.toString("utf8");
+      const decoded = upstreamText
+        .replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">")
+        .replaceAll("&quot;", '"').replaceAll("&#39;", "'").replaceAll("&#x27;", "'");
+      if (!upstreamText.includes(source.quote) && !decoded.includes(source.quote)) {
+        throw new Error(`Remote source for ${verificationId}:${index} does not contain the exact quote.`);
+      }
     }
   }
   return { checkedSources: fetched.size };
