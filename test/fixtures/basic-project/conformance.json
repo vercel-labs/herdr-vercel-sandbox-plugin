@@ -1,0 +1,5 @@
+{
+  "outputFile": "agent-conformance-output.txt",
+  "expectedContents": "Herdr agent adapter works.\n",
+  "agentPrompt": "Create agent-conformance-output.txt containing exactly: Herdr agent adapter works."
+}

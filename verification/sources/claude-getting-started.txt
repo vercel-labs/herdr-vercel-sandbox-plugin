@@ -1,0 +1,10 @@
+Canonical URL: https://docs.anthropic.com/en/docs/claude-code/getting-started
+Retrieved: 2026-08-01
+
+npm install -g @anthropic-ai/claude-code
+
+Claude Code requires Node.js 18 or newer.
+
+Claude Code securely stores your credentials.
+
+DISABLE_AUTOUPDATER=1

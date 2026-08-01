@@ -1,0 +1,30 @@
+# Verification contract
+
+Claims used by the shared bridge are grounded in these authoritative sources:
+
+- [Herdr plugin API](https://herdr.dev/docs/socket-api/): actions are manifest-declared in plugin v1, action commands receive `HERDR_PLUGIN_ACTION_ID`, and plugins own their config and state schemas.
+- [Herdr CLI reference](https://herdr.dev/docs/cli-reference/): plugins can show user-visible lifecycle feedback with `herdr notification show <title> --body <text> --sound none`.
+- [Herdr VM and Sandbox wrappers](https://herdr.dev/docs/agents/#vms-and-sandbox-wrappers): `HERDR_AGENT=<agent>` identifies an agent hidden behind a host-visible wrapper.
+- [Herdr agent automation](https://herdr.dev/docs/agent-automation/): Herdr can read and control recognized agents in panes.
+- [Sandbox interactive shell](https://vercel.com/docs/sandbox/working-with-sandbox#debug-with-an-interactive-shell): `sandbox connect` provides an SSH-like interactive shell.
+- [Sandbox CLI reference](https://vercel.com/docs/sandbox/cli-reference): the published reference currently describes `sandbox run` as able to create or resume, while the installed CLI and live behavior described below contradict that wording.
+- [Persistent Sandboxes](https://vercel.com/docs/sandbox/concepts/persistent-sandboxes): an operation such as `exec` against a stopped persistent Sandbox starts a new session from its latest snapshot.
+- [Vercel CLI](https://vercel.com/docs/cli): `vercel login` is the interactive terminal authentication path and the CLI requires authentication before accessing account resources.
+- [Vercel whoami](https://vercel.com/docs/cli/whoami): `vercel whoami` reports the currently authenticated CLI user.
+- [Vercel project linking](https://vercel.com/docs/projects/deploy-from-cli#1-link-your-project): `vercel link` interactively selects an accessible team/project or creates a project and writes the local `.vercel` project configuration.
+
+Each built-in adapter is paired with a claim manifest under `verification/adapters.json`, canonical source captures, exact supporting quotes, and optional executable lifecycle receipts. Adapter source cannot assign its own proof level. Missing, stale, changed, fabricated, version-mismatched, or incomplete evidence leaves the adapter a candidate; it cannot be used for a normal start.
+
+The Herdr manifest-action constraint was captured from the official Socket API page on 2026-07-31. The captured source SHA-256 was `041310e86fd7c6a668df4a97f3ecdf7a555df375d85ff3740821040360107521`, and the exact-text verifier returned `DOC_TEXT_CONFIRMED`.
+
+The Herdr CLI reference was captured on 2026-07-31 with SHA-256 `eff17cc5e8576d061de9317b371b89186a3f5db68012a7ebce4cd2b1b4adafe3`. The captured source contains the documented `herdr notification show` command, and the installed Herdr 0.7.5 binary exposes the same flags. Stop and reconnect actions now use that command for explicit lifecycle feedback; notification delivery failures do not change the result of an already successful Sandbox operation.
+
+There is an intentionally recorded documentation/runtime contradiction. The current published Sandbox CLI reference says `sandbox run` can create or resume. Installed Vercel CLI `56.2.0` describes it as create-and-run, and a 2026-07-31 live invocation of `sandbox run --name` produced a fresh filesystem. The bridge therefore does not infer get-or-create semantics: confirmed first creation uses `sandbox create --name`; mapped Sandboxes reconnect with `sandbox exec`; only the CLI's specific not-found response is classified as absence. Authentication, permission, team/project, network, and unknown failures fail closed. A missing mapped Sandbox presents recovery rather than silently creating a replacement.
+
+Vercel CLI `56.2.0` was inspected and exercised locally on 2026-07-31. Its help and implementation confirm that `--non-interactive=false` explicitly preserves the interactive `login` and `link` flows when launched from an agent-managed terminal. Automated onboarding tests use a fake CLI to prove the exact commands, signed-in and signed-out classification, project-link validation, and the invariant that a missing prerequisite cannot call `vercel sandbox` or write `agents.json`. See [the onboarding ground-truth record](vercel-onboarding-ground-truth.md).
+
+`src/verification.mjs` validates source URL, retrieval date, freshness, capture SHA-256, exact quote text and quote hash. A behavior receipt must be version-specific, contain no self-asserted proof level, match its manifest metadata, reference a raw transcript and seven distinct phase-output files, and verify every artifact hash. The required phases are install, authenticate, modify, export, stop, reconnect, and persistence. Tests deliberately reject fabricated labels, missing receipts, changed hashes, stale documentation, mismatched versions, transcript tampering, receipt-metadata mismatch, output tampering, and missing phases.
+
+Run `npm run check` for syntax, unit, schema, migration, dispatch, bridge lifecycle, and local adapter evidence verification. Run `npm run verify:sources:remote` while online to fetch every authoritative source document and compare its bytes with the recorded upstream SHA-256. The live fixture procedure in [agent conformance](adapter-conformance.md) remains required for every pinned agent version.
+
+On 2026-08-01, local-plugin registration was also verified with an isolated Herdr 0.7.5 profile. `HERDR_CONFIG_PATH` and `XDG_CONFIG_HOME` both pointed at a newly created directory under `/private/tmp`; `herdr plugin link <path> --enabled` registered `vercel.sandbox`, and the isolated `plugin list` and `plugin action list` commands returned all nine manifest actions. A subsequent `herdr plugin list --json` without either override confirmed that the normal profile remained linked. In this Herdr build, the positional plugin path must precede `--enabled`, despite the generated usage line showing the option first.

@@ -1,0 +1,4 @@
+Canonical URL: https://opencode.ai/docs/
+Retrieved: 2026-08-01
+
+npm install -g opencode-ai

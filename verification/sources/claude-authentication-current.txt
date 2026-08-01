@@ -1,0 +1,11 @@
+Canonical URL: https://code.claude.com/docs/en/authentication
+Retrieved: 2026-08-01
+Source classification: official product documentation
+
+After installing Claude Code, run `claude` in your terminal.
+
+This happens when the browser can't reach Claude Code's local callback server, which is common in WSL2, SSH sessions, and containers.
+
+On Linux, credentials are stored in `~/.claude/.credentials.json` with file mode `0600`.
+
+If you've set the `CLAUDE_CONFIG_DIR` environment variable on Linux or Windows, the `.credentials.json` file lives under that directory instead.

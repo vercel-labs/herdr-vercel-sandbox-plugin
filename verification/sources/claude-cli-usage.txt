@@ -1,0 +1,8 @@
+Canonical URL: https://docs.anthropic.com/en/docs/claude-code/cli-usage
+Retrieved: 2026-08-01
+
+To start Claude Code, run: claude
+
+claude -c
+
+claude -r

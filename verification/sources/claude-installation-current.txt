@@ -1,0 +1,5 @@
+Canonical URL: https://code.claude.com/docs/en/installation
+Retrieved: 2026-08-01
+Source classification: official product documentation
+
+npm install -g @anthropic-ai/claude-code
