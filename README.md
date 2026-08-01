@@ -239,7 +239,7 @@ The Sandbox bridge is shared. Each supported CLI contributes a small adapter con
 
 An adapter becomes normally selectable only after installation, remote authentication, interactive launch, TTY behavior, credential persistence, Herdr detection, and Sandbox runtime compatibility are confirmed by validated artifacts. Evidence problems (missing records, stale documentation sources, changed hashes) demote an adapter to a non-selectable candidate; they never prevent the plugin from loading, so stop, delete, and recovery keep working for existing Sandboxes. See [agent conformance](docs/adapter-conformance.md).
 
-Codex, OpenCode, and Claude Code are built-in docs-confirmed candidates. All three have completed the full lifecycle in live Sandboxes as recorded operator observations; none of those runs retained the raw artifacts the deterministic receipt format requires, so none is promoted yet. See the [Codex record](docs/live-verification.md), the [OpenCode record](docs/opencode-live-verification.md), and the [Claude Code record](docs/claude-live-verification.md).
+Codex, OpenCode, and Claude Code are built-in docs-confirmed candidates. All three have completed the full lifecycle in live Sandboxes as recorded operator observations; none of those runs retained the raw artifacts the deterministic receipt format requires, so none is promoted yet. See the [Codex record](docs/codex-live-verification.md), the [OpenCode record](docs/opencode-live-verification.md), and the [Claude Code record](docs/claude-live-verification.md).
 
 ## planned public installation
 
