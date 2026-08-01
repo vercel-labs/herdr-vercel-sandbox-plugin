@@ -15,7 +15,7 @@
 ## 2. Clean installation
 
 - [ ] A second user completes installation from the README without undocumented help.
-- [ ] A pinned built-in adapter has a valid deterministic lifecycle receipt.
+- [x] A pinned built-in adapter has a valid deterministic lifecycle receipt: Claude Code `2.1.220`, captured live on 2026-08-01 (`verification/receipts/claude-code-2026-08-01`).
 - [ ] A second user configures that verified adapter and completes the fixture lifecycle.
 
 A temporary clean Herdr profile may validate manifest discovery and action registration, but it does not replace the second-user usability test.

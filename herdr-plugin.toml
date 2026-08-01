@@ -1,6 +1,6 @@
 id = "vercel.sandbox"
 name = "Vercel Sandbox"
-version = "0.4.0"
+version = "0.4.1"
 min_herdr_version = "0.7.5"
 description = "Run one coding-agent CLI per persistent Vercel Sandbox."
 platforms = ["linux", "macos"]

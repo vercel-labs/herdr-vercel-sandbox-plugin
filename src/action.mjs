@@ -343,6 +343,28 @@ async function runMapped(mode) {
     throw new Error(`Exit ${context.focused_pane_agent} in pane ${paneId} before applying its Sandbox changes.`);
   }
 
+  if (mode === "apply") {
+    // The bridge's stdout is not reliably visible in the Herdr UI, so the
+    // apply result must also surface as a notification toast.
+    const result = run(process.execPath, [
+      path.join(pluginRoot, "src", "bridge.mjs"), "apply",
+      "--state-dir", stateDir,
+      "--config-dir", configDir,
+      "--pane-id", paneId,
+    ], { capture: true });
+    const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
+    if (output.trim()) console.log(output.trim());
+    const summary = /Applied Sandbox changes/.test(output)
+      ? `Applied ${entry.sandboxName} changes to ${entry.localRoot}.`
+      : /already present locally/.test(output)
+        ? "Those Sandbox changes were already applied locally; no file changed."
+        : /No changes to apply/.test(output)
+          ? `No changes to apply from ${entry.sandboxName}.`
+          : "Apply completed.";
+    notify("Apply Sandbox changes locally", summary);
+    return;
+  }
+
   run(process.execPath, [
     path.join(pluginRoot, "src", "bridge.mjs"), mode,
     "--state-dir", stateDir,

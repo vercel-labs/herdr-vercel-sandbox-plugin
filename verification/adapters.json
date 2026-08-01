@@ -231,7 +231,28 @@
         "ttyBehavior",
         "herdrDetection",
         "sandboxRuntime"
-      ]
+      ],
+      "behaviorReceipt": {
+        "agentVersion": "2.1.220",
+        "method": "interactive-lifecycle-v1",
+        "observedAt": "2026-08-01T21:28:46.823Z",
+        "command": [
+          "node",
+          "scripts/capture-lifecycle-run.mjs",
+          "--pane-id",
+          "w8:p8"
+        ],
+        "environment": {
+          "sandboxName": "herdr-claude-code-79281446b151",
+          "agentKind": "claude-code",
+          "runtime": "node24"
+        },
+        "exitStatus": 0,
+        "transcript": "receipts/claude-code-2026-08-01/transcript.txt",
+        "transcriptSha256": "911bb85c08121c96647d26d1f4b63ea2d120947d0e01ec2779303e8bb6fb9268",
+        "receipt": "receipts/claude-code-2026-08-01/receipt.json",
+        "receiptSha256": "686c7d2ed3c7c31d4c42fcd5628fcb7baa98e3e38391ff744c6565ae0e85b1b8"
+      }
     }
   }
 }

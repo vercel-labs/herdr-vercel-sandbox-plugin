@@ -1,0 +1,50 @@
+Lifecycle capture started 2026-08-01T21:20:51.600Z for pane w8:p8
+
+=== install ===
+observedAt: 2026-08-01T21:20:55.793Z
+sandboxName: herdr-claude-code-79281446b151
+installedVersion: 2.1.220 (Claude Code)
+preparedAt: 2026-08-01T21:13:44.200Z
+syncedFileCount: 47
+lifecycleState: ready
+
+=== authenticate ===
+observedAt: 2026-08-01T21:25:20.876Z
+method: not recorded
+note: completed interactively inside the Sandbox; no credential material captured by design
+
+=== modify ===
+observedAt: 2026-08-01T21:25:22.062Z
+probe: remote fixture file content
+command: cat '/vercel/sandbox/workspace/test/fixtures/basic-project/claude-lifecycle-proof.txt'
+exitStatus: 0
+stdout: Herdr Claude adapter works end to end.
+stderr: Vercel CLI 56.2.0 (Node.js 26.4.0)
+$ sh -lc cat '/vercel/sandbox/workspace/test/fixtures/basic-project/claude-lifecycle-proof.txt'
+
+=== export ===
+observedAt: 2026-08-01T21:25:29.317Z
+lastAppliedExportCommit: 90a80142d67c2ad967640e33084c52f493108f60
+local git status --short:
+M scripts/capture-lifecycle-run.mjs
+ M src/action.mjs
+?? test/fixtures/basic-project/claude-lifecycle-proof.txt
+
+=== stop ===
+observedAt: 2026-08-01T21:26:02.479Z
+lifecycleState: stopped
+stoppedAt: 2026-08-01T21:25:51.664Z
+
+=== reconnect ===
+observedAt: 2026-08-01T21:27:55.012Z
+lifecycleState: ready
+lastConnectedAt: 2026-08-01T21:27:29.619Z
+
+=== persistence ===
+observedAt: 2026-08-01T21:28:45.696Z
+probe: persisted fixture file content
+command: cat '/vercel/sandbox/workspace/test/fixtures/basic-project/claude-lifecycle-proof.txt'
+exitStatus: 0
+stdout: Herdr Claude adapter works end to end.
+stderr: Vercel CLI 56.2.0 (Node.js 26.4.0)
+$ sh -lc cat '/vercel/sandbox/workspace/test/fixtures/basic-project/claude-lifecycle-proof.txt'

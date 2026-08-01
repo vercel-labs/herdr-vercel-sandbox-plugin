@@ -1,0 +1,7 @@
+observedAt: 2026-08-01T21:28:45.696Z
+probe: persisted fixture file content
+command: cat '/vercel/sandbox/workspace/test/fixtures/basic-project/claude-lifecycle-proof.txt'
+exitStatus: 0
+stdout: Herdr Claude adapter works end to end.
+stderr: Vercel CLI 56.2.0 (Node.js 26.4.0)
+$ sh -lc cat '/vercel/sandbox/workspace/test/fixtures/basic-project/claude-lifecycle-proof.txt'

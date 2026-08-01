@@ -79,7 +79,7 @@ Version 1 entries migrate from `agent` to `agentKind` when loaded. State writes 
 
 ## current limitations
 
-- Codex, OpenCode, and Claude Code are built-in docs-confirmed candidates. None is normally selectable until its pinned version has a deterministic lifecycle receipt.
+- Claude Code `2.1.220` is lifecycle-verified and normally selectable. Codex and OpenCode are built-in docs-confirmed candidates and require the explicit candidate opt-in until their pinned versions have deterministic lifecycle receipts.
 - The workspace must be inside a Git worktree.
 - Local and remote files do not synchronize continuously.
 - Detaching from Herdr preserves running processes, but a full Herdr server restart does not restore the terminal process. The persistent Sandbox and plugin mapping remain, so the user reconnects explicitly after restart.

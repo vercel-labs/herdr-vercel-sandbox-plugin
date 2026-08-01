@@ -1,0 +1,6 @@
+observedAt: 2026-08-01T21:20:55.793Z
+sandboxName: herdr-claude-code-79281446b151
+installedVersion: 2.1.220 (Claude Code)
+preparedAt: 2026-08-01T21:13:44.200Z
+syncedFileCount: 47
+lifecycleState: ready

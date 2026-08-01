@@ -77,7 +77,9 @@ function remoteProbe(entry, config, command, label) {
 }
 
 const config = await readConfig(configDir);
-const fixtureFile = "agent-conformance-output.txt";
+// The proof file must not already exist in the uploaded snapshot, or the
+// modify and export phases have nothing to prove.
+const fixtureFile = argument("--fixture-file") ?? "agent-conformance-output.txt";
 console.log(`Capturing phases: ${lifecyclePhases.join(", ")}. Perform each step in Herdr, then press Enter here.`);
 
 await rl.question("1/7 install: invoke Start (or confirm setup finished) in the Herdr pane, then press Enter. ");

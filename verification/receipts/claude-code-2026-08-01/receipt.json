@@ -1,0 +1,70 @@
+{
+  "agentVersion": "2.1.220",
+  "method": "interactive-lifecycle-v1",
+  "observedAt": "2026-08-01T21:28:46.823Z",
+  "command": [
+    "node",
+    "scripts/capture-lifecycle-run.mjs",
+    "--pane-id",
+    "w8:p8"
+  ],
+  "environment": {
+    "sandboxName": "herdr-claude-code-79281446b151",
+    "agentKind": "claude-code",
+    "runtime": "node24"
+  },
+  "exitStatus": 0,
+  "phases": [
+    {
+      "name": "install",
+      "exitStatus": 0,
+      "output": "receipts/claude-code-2026-08-01/install.txt",
+      "outputSha256": "5e8624c7e64138f8cb8596f263108ae8b7f2a41994fa0a31c533ef222f0337c5"
+    },
+    {
+      "name": "authenticate",
+      "exitStatus": 0,
+      "output": "receipts/claude-code-2026-08-01/authenticate.txt",
+      "outputSha256": "9b73859d820d41a0795ef549ebbf4bc54be792b862afa2793f08c6a7c0130c96"
+    },
+    {
+      "name": "modify",
+      "exitStatus": 0,
+      "output": "receipts/claude-code-2026-08-01/modify.txt",
+      "outputSha256": "749fe2a36f23dd48a26e717d3d7b1bed7fed22c508f177424a9581d7854b05cc"
+    },
+    {
+      "name": "export",
+      "exitStatus": 0,
+      "output": "receipts/claude-code-2026-08-01/export.txt",
+      "outputSha256": "247284651d1802da981954ce177d5e6e469a4e8264a13bac032b609f7de601e4"
+    },
+    {
+      "name": "stop",
+      "exitStatus": 0,
+      "output": "receipts/claude-code-2026-08-01/stop.txt",
+      "outputSha256": "127e2397a6d587a5e2c99b44363d80167cc918c333b49a27ffb3789f1b63ef2d"
+    },
+    {
+      "name": "reconnect",
+      "exitStatus": 0,
+      "output": "receipts/claude-code-2026-08-01/reconnect.txt",
+      "outputSha256": "83c11cb1788c77f94691203a55cd71d7bbedc0d96f3ad33085db205f6c423cdc"
+    },
+    {
+      "name": "persistence",
+      "exitStatus": 0,
+      "output": "receipts/claude-code-2026-08-01/persistence.txt",
+      "outputSha256": "324b04dfdac29060bed24205d3743d2be5f9a184d35d0eaa2510bd94b427feda"
+    }
+  ],
+  "claims": [
+    "credentialPersistence",
+    "herdrDetection",
+    "interactiveLaunch",
+    "linuxInstallation",
+    "remoteAuthentication",
+    "sandboxRuntime",
+    "ttyBehavior"
+  ]
+}

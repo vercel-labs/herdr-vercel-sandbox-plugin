@@ -1,0 +1,6 @@
+observedAt: 2026-08-01T21:25:29.317Z
+lastAppliedExportCommit: 90a80142d67c2ad967640e33084c52f493108f60
+local git status --short:
+M scripts/capture-lifecycle-run.mjs
+ M src/action.mjs
+?? test/fixtures/basic-project/claude-lifecycle-proof.txt

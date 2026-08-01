@@ -252,15 +252,19 @@ if [ "$2" = "--help" ]; then
   }
 });
 
-test("built-in adapters remain candidates until deterministic lifecycle receipts exist", () => {
-  assert.deepEqual(supportedAgentKinds(), []);
-  assert.deepEqual(candidateAgentKinds(), ["codex", "opencode", "claude-code"]);
-  for (const kind of candidateAgentKinds()) {
+test("only adapters with a validated lifecycle receipt are normally selectable", () => {
+  assert.deepEqual(supportedAgentKinds(), ["claude-code"]);
+  assert.deepEqual(candidateAgentKinds(), ["codex", "opencode"]);
+  const verified = getAgentAdapter("claude-code");
+  assert.equal(verified.supportLevel, "built-in-lifecycle-verified");
+  for (const kind of ["claude-code", "codex", "opencode"]) {
     const adapter = getAgentAdapter(kind, { allowCandidate: true });
-    assert.equal(adapter.supportLevel, "docs-confirmed-candidate");
     assert.ok(adapter.capabilities.herdrDetectionKind);
     assert.equal(adapter.capabilities.interactiveTTY, true);
     assert.equal(adapter.capabilities.resumeSupported, true);
+  }
+  for (const kind of ["codex", "opencode"]) {
+    assert.equal(getAgentAdapter(kind, { allowCandidate: true }).supportLevel, "docs-confirmed-candidate");
     assert.throws(() => getAgentAdapter(kind), /has not passed the live Sandbox lifecycle/);
   }
 });
@@ -368,7 +372,8 @@ test("every registered adapter produces shell-valid install and launch scripts",
 });
 
 test("agent selection is generic and fails closed for unverified kinds", () => {
-  assert.throws(() => resolveAgentKind({}), /No built-in adapter currently has a valid lifecycle receipt/);
+  assert.equal(resolveAgentKind({}), "claude-code", "the single verified adapter is selected automatically");
+  assert.equal(resolveAgentKind({ agentKind: "claude-code" }), "claude-code", "a verified adapter needs no opt-in flag");
   assert.throws(() => resolveAgentKind({ agentKind: "codex" }), /has not passed the live Sandbox lifecycle/);
   assert.throws(() => resolveAgentKind({ agentKind: "opencode" }), /has not passed the live Sandbox lifecycle/);
   assert.equal(resolveAgentKind({ agentKind: "codex", allowCandidateAgents: true }), "codex");
