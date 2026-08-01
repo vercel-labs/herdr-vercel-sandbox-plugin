@@ -265,6 +265,25 @@ test("built-in adapters remain candidates until deterministic lifecycle receipts
   }
 });
 
+test("Codex is pinned, installs from the official package, and gates launch on login status", () => {
+  const adapter = getAgentAdapter("codex", { allowCandidate: true });
+  const install = adapter.installScript({});
+  const launch = adapter.launchScript({ agentArgs: { codex: [] } });
+
+  assert.equal(adapter.kind, "codex");
+  assert.equal(adapter.pinnedVersion, "0.146.0");
+  assert.deepEqual(adapter.capabilities.authModes, ["device-code"]);
+  assert.deepEqual(adapter.versionCommand, [
+    "/vercel/sandbox/.herdr-tools/node_modules/.bin/codex",
+    "--version",
+  ]);
+  assert.match(install, /@openai\/codex@0\.146\.0/);
+  assert.match(launch, /login status/);
+  assert.match(launch, /login --device-auth/);
+  assert.doesNotMatch(install, /\/vercel\/sandbox\/workspace/);
+  assert.doesNotMatch(launch, /HOME=/);
+});
+
 test("OpenCode records the pinned version and supported authentication modes", () => {
   const adapter = getAgentAdapter("opencode", { allowCandidate: true });
   assert.equal(adapter.kind, "opencode");
