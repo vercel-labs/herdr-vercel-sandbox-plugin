@@ -38,19 +38,29 @@ Herdr's detection domain by design.
 
 ## v2.1 Machine-readable action results
 
-Every action appends exactly one final line to its stdout:
+Every action prints exactly one marker line as the FIRST line of its stdout:
 
 ```text
 HERDR_SANDBOX_RESULT: {"schemaVersion":1,"action":"apply-changes","ok":true,...}
 ```
 
-- One line, prefixed, JSON object, no wrapping. Humans skim past it; agents
-  `pane wait-output --regex '^HERDR_SANDBOX_RESULT: '` or parse the stdout of
-  a direct action invocation.
+- First, not last, for a measured reason: Herdr captures action stdout into
+  its plugin log with a 64 KiB cap that keeps the head and drops the tail
+  (`read_capped_plugin_output`, Herdr source, verified 2026-08-02). A trailing
+  marker would be truncated away by a large manifest listing; a leading one
+  always survives.
+- One line, prefixed, JSON object, no wrapping. Humans skim past it.
 - Emitted on success and on failure (`ok: false` with `errorKind` from the
   existing failure classifier: not-found, authentication, permission, network,
   target, unknown).
 - `schemaVersion` is mandatory and bumps on breaking changes.
+
+The read path for orchestrators, measured end to end on Herdr 0.7.5:
+`herdr plugin action invoke <action-id> --plugin vercel.sandbox` returns an
+immediate JSON ack containing a `log.log_id`; the action runs against the
+focused pane; `herdr plugin log list --plugin vercel.sandbox` then returns the
+captured stdout (marker line included, verbatim), exit code, status, and
+timestamps as JSON. No screen-scraping anywhere in the loop.
 
 Per-action payloads (draft):
 
@@ -104,11 +114,17 @@ invoke replace or forget; the user grants that power explicitly in config,
 once, in writing (the same opt-in philosophy as Claude Code's
 permission-skipping flags).
 
-Enforcement depends on invocation provenance: the plugin must know whether an
-action came from a keybinding or from the agent CLI. Whether Herdr exposes
-this is verifiable in the Herdr source during the build. If it does, the flag
-is enforced; if it does not, the flag ships as documented policy and
-"expose invocation provenance to plugins" is queued as a maintainer question.
+Enforcement uses invocation provenance, which Herdr exposes and we verified:
+`HERDR_PLUGIN_CONTEXT_JSON.invocation_source` is `"keybinding"` for
+keybindings, `"cli"` for `herdr plugin action invoke`, `"api"` for direct
+socket calls (Herdr source plus a live end-to-end probe, 2026-08-02). The gate
+allows destructive actions for `"keybinding"` and requires the opt-in for
+everything else.
+
+Honest limit: an agent that simulates the keybinding chord with `send-keys`
+arrives labeled `"keybinding"`. The flag therefore gates the sanctioned
+orchestration path, not adversarial keystroke driving; attributing synthetic
+key input is Herdr-side work and stays on the maintainer question list.
 
 ## v2.3 Conformance addition
 
