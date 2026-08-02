@@ -3,7 +3,9 @@ import path from "node:path";
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { resolveAgentAdapter, resolveAgentKind } from "./agents.mjs";
+import { emitResult, errorKindOf, resultAlreadyEmitted } from "./result.mjs";
 import {
+  DELETION_CONFIRMATION_TTL_MS,
   contextPane,
   contextWorkspace,
   createPaneStateEntry,
@@ -93,12 +95,36 @@ function openOnboardingPane(mode, sourcePane, cwd) {
   if (!paneId) throw new Error(`Herdr did not return an onboarding pane id: ${JSON.stringify(split)}`);
   run(herdr, ["pane", "rename", paneId, account ? "Connect Vercel account" : "Link Vercel project"]);
   run(herdr, ["pane", "run", paneId, onboardingCommand(mode, cwd)]);
+  emitResult({
+    action: actionId,
+    ok: true,
+    phase: "onboarding-opened",
+    onboarding: mode,
+    onboardingPaneId: paneId,
+  });
   notify(
     account ? "Connect Vercel before starting a Sandbox" : "Link this worktree before starting a Sandbox",
     account
       ? "Complete the official Vercel CLI login flow in the new pane, then retry Start. No Sandbox was created."
       : "Choose or create a Vercel project in the new pane, then retry Start. No Sandbox was created.",
   );
+}
+
+// Destructive actions are limited to human keybinding invocations unless the
+// user has opted in. Provenance comes from Herdr's invocation_source
+// ("keybinding" | "cli" | "api", verified against Herdr 0.7.5 source and a
+// live probe on 2026-08-02). An agent simulating the keybinding chord still
+// arrives as "keybinding"; this gates the sanctioned orchestration path.
+function assertDeletionAllowed(config) {
+  const source = context.invocation_source;
+  if (source === "keybinding") return;
+  if (config.allowOrchestratedDeletion === true) return;
+  const error = new Error(
+    `Permanent Sandbox deletion was invoked from "${source ?? "unknown"}", not a keybinding. `
+    + "Set allowOrchestratedDeletion to true in config.json to let orchestrating agents delete Sandboxes.",
+  );
+  error.errorKind = "permission";
+  throw error;
 }
 
 async function connectVercel() {
@@ -165,6 +191,15 @@ async function startAgent() {
   if (!isUploadApprovalFresh(state.uploadApprovals[approvalKey], manifest.digest)) {
     state.uploadApprovals[approvalKey] = { digest: manifest.digest, reviewedAt: new Date().toISOString() };
     await saveState(stateDir, state);
+    emitResult({
+      action: "start-agent",
+      ok: true,
+      phase: "manifest-review",
+      manifestDigest: manifest.digest,
+      includedCount: manifest.included.length,
+      excludedCount: manifest.excluded.length,
+      approvalExpiresAt: new Date(Date.now() + UPLOAD_APPROVAL_TTL_MS).toISOString(),
+    });
     console.log(formatUploadManifest(manifest));
     console.log(`\nNo Sandbox was created. Review the complete manifest above, then invoke Start configured agent in a new Sandbox again within ${UPLOAD_APPROVAL_TTL_MS / 60_000} minutes to approve this exact file set.`);
     notify("Review files before Sandbox upload", `${manifest.included.length} files are eligible and ${manifest.excluded.length} are excluded. Invoke Start again only if the complete terminal manifest is correct.`);
@@ -202,13 +237,22 @@ async function startAgent() {
     run(herdr, ["pane", "rename", paneId, `${adapter.title} · Vercel Sandbox`]);
     run(herdr, ["pane", "run", paneId, bridgeCommand("start", paneId, adapter)]);
   } catch (error) {
-    const latest = await loadState(stateDir);
-    if (latest.panes?.[paneId] && !latest.panes[paneId].remoteCreated) {
-      delete latest.panes[paneId];
-      await saveState(stateDir, latest);
+    const cleanup = await loadState(stateDir);
+    if (cleanup.panes?.[paneId] && !cleanup.panes[paneId].remoteCreated) {
+      delete cleanup.panes[paneId];
+      await saveState(stateDir, cleanup);
     }
     throw error;
   }
+  emitResult({
+    action: "start-agent",
+    ok: true,
+    phase: "started",
+    paneId,
+    sandboxName: latest.panes[paneId].sandboxName,
+    agentKind,
+    adapterStatus: latest.panes[paneId].adapterStatus,
+  });
   console.log(`Started ${adapter.title} Sandbox setup in ${paneId}.`);
 }
 
@@ -219,12 +263,21 @@ async function replaceSandbox() {
   if (context.focused_pane_agent) {
     throw new Error(`Exit ${context.focused_pane_agent} in pane ${paneId} before replacing its Sandbox.`);
   }
+  const config = await readConfig(configDir);
+  assertDeletionAllowed(config);
 
   let { state, entry } = await stateForPane(stateDir, paneId);
   const confirmation = armOrConfirmDeletion(entry, "replace-sandbox");
   await savePaneEntry(stateDir, paneId, entry);
   if (!confirmation.confirmed) {
     const names = confirmation.sandboxNames.join(", ");
+    emitResult({
+      action: "replace-sandbox",
+      ok: true,
+      phase: "armed",
+      sandboxNames: confirmation.sandboxNames,
+      confirmDeadline: new Date(Date.now() + DELETION_CONFIRMATION_TTL_MS).toISOString(),
+    });
     notify(
       "Confirm permanent Sandbox replacement",
       `Invoke Replace this Sandbox again within 60 seconds to permanently delete: ${names}`,
@@ -240,7 +293,6 @@ async function replaceSandbox() {
     "--pane-id", paneId,
   ]);
   ({ state, entry } = await stateForPane(stateDir, paneId));
-  const config = await readConfig(configDir);
   config.scope = entry.vercelScope;
   config.project = entry.vercelProject;
   const adapter = resolveAgentAdapter(config, entry.agentKind, entry.agentProfile);
@@ -264,6 +316,14 @@ async function replaceSandbox() {
 
   run(herdr, ["pane", "rename", paneId, `${adapter.title} · Vercel Sandbox`]);
   run(herdr, ["pane", "run", paneId, bridgeCommand("start", paneId, adapter)]);
+  emitResult({
+    action: "replace-sandbox",
+    ok: true,
+    phase: "deleted",
+    deletedSandboxNames: confirmation.sandboxNames,
+    sandboxName: replacement.sandboxName,
+    paneId,
+  });
   notify(
     `Creating replacement ${adapter.title} Sandbox`,
     `${replacement.sandboxName} will use the focused worktree. The previous tracked Sandbox was permanently deleted.`,
@@ -276,6 +336,8 @@ async function forgetMapping() {
   if (context.focused_pane_agent) {
     throw new Error(`Exit ${context.focused_pane_agent} in pane ${paneId} before forgetting its mapping.`);
   }
+  const config = await readConfig(configDir);
+  assertDeletionAllowed(config);
   let { entry } = await stateForPane(stateDir, paneId);
   // Pre-0.3.0 mappings have no saved team/project target, so their remote
   // Sandboxes cannot be safely deleted through the CLI. Forgetting must still
@@ -288,6 +350,14 @@ async function forgetMapping() {
     const warning = hasTarget
       ? `permanently delete: ${names}`
       : `forget ${names} WITHOUT remote deletion (this legacy mapping has no saved Vercel team/project target)`;
+    emitResult({
+      action: "forget-mapping",
+      ok: true,
+      phase: "armed",
+      sandboxNames: confirmation.sandboxNames,
+      remoteDeletionPossible: hasTarget,
+      confirmDeadline: new Date(Date.now() + DELETION_CONFIRMATION_TTL_MS).toISOString(),
+    });
     notify("Confirm permanent Sandbox deletion", `Invoke Delete Sandbox and forget mapping again within 60 seconds to ${warning}`);
     console.log(`No Sandbox was changed. Invoke Delete Sandbox and forget mapping again within 60 seconds to ${warning}.`);
     return;
@@ -302,6 +372,13 @@ async function forgetMapping() {
     ]);
     ({ entry } = await stateForPane(stateDir, paneId));
     await forgetPaneState(stateDir, paneId);
+    emitResult({
+      action: "forget-mapping",
+      ok: true,
+      phase: "deleted",
+      deletedSandboxNames: confirmation.sandboxNames,
+      paneId,
+    });
     notify(
       "Vercel Sandbox permanently deleted",
       `${entry.sandboxName} and its local pane mapping were deleted.`,
@@ -312,6 +389,15 @@ async function forgetMapping() {
 
   await forgetPaneState(stateDir, paneId);
   const names = confirmation.sandboxNames.join(", ");
+  emitResult({
+    action: "forget-mapping",
+    ok: true,
+    phase: "deleted",
+    deletedSandboxNames: [],
+    remoteDeletionSkipped: true,
+    unverifiedSandboxNames: confirmation.sandboxNames,
+    paneId,
+  });
   notify("Sandbox mapping forgotten without remote deletion", `Check and remove manually if needed: ${names}`);
   console.log(
     `Forgot the local mapping for pane ${paneId}. No saved Vercel team/project target exists for this legacy mapping, `
@@ -332,6 +418,7 @@ async function runMapped(mode) {
       throw new Error(`Pane ${paneId} already contains a detected agent (${context.focused_pane_agent}).`);
     }
     run(herdr, ["pane", "run", paneId, bridgeCommand("connect", paneId, adapter)]);
+    emitResult({ action: "reconnect", ok: true, paneId, sandboxName: entry.sandboxName });
     notify(
       `Reconnecting ${adapter.title}`,
       `Opening ${entry.sandboxName}; its persistent filesystem and saved agent authentication are preserved.`,
@@ -345,23 +432,62 @@ async function runMapped(mode) {
 
   if (mode === "apply") {
     // The bridge's stdout is not reliably visible in the Herdr UI, so the
-    // apply result must also surface as a notification toast.
+    // apply result surfaces as a result line and a notification toast.
+    let output;
+    try {
+      const result = run(process.execPath, [
+        path.join(pluginRoot, "src", "bridge.mjs"), "apply",
+        "--state-dir", stateDir,
+        "--config-dir", configDir,
+        "--pane-id", paneId,
+      ], { capture: true });
+      output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
+    } catch (error) {
+      const conflict = /conflict with this worktree/.test(String(error?.message ?? ""));
+      emitResult({
+        action: "apply-changes",
+        ok: false,
+        result: conflict ? "conflict" : "error",
+        errorKind: conflict ? "conflict" : errorKindOf(error),
+        localRoot: entry.localRoot,
+      });
+      throw error;
+    }
+    const outcome = /Applied Sandbox changes/.test(output)
+      ? "applied"
+      : /already present locally/.test(output)
+        ? "already-applied"
+        : /No changes to apply/.test(output) ? "no-changes" : "unknown";
+    const { entry: after } = await stateForPane(stateDir, paneId).catch(() => ({ entry }));
+    emitResult({
+      action: "apply-changes",
+      ok: true,
+      result: outcome,
+      exportCommit: after.lastAppliedExportCommit ?? null,
+      localRoot: entry.localRoot,
+    });
+    if (output.trim()) console.log(output.trim());
+    const summary = outcome === "applied"
+      ? `Applied ${entry.sandboxName} changes to ${entry.localRoot}.`
+      : outcome === "already-applied"
+        ? "Those Sandbox changes were already applied locally; no file changed."
+        : outcome === "no-changes"
+          ? `No changes to apply from ${entry.sandboxName}.`
+          : "Apply completed.";
+    notify("Apply Sandbox changes locally", summary);
+    return;
+  }
+
+  if (mode === "info") {
     const result = run(process.execPath, [
-      path.join(pluginRoot, "src", "bridge.mjs"), "apply",
+      path.join(pluginRoot, "src", "bridge.mjs"), "info",
       "--state-dir", stateDir,
       "--config-dir", configDir,
       "--pane-id", paneId,
     ], { capture: true });
-    const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
-    if (output.trim()) console.log(output.trim());
-    const summary = /Applied Sandbox changes/.test(output)
-      ? `Applied ${entry.sandboxName} changes to ${entry.localRoot}.`
-      : /already present locally/.test(output)
-        ? "Those Sandbox changes were already applied locally; no file changed."
-        : /No changes to apply/.test(output)
-          ? `No changes to apply from ${entry.sandboxName}.`
-          : "Apply completed.";
-    notify("Apply Sandbox changes locally", summary);
+    const parsed = JSON.parse(result.stdout);
+    emitResult({ action: "info", ok: true, ...parsed });
+    console.log(result.stdout.trim());
     return;
   }
 
@@ -373,6 +499,7 @@ async function runMapped(mode) {
   ]);
 
   if (mode === "stop") {
+    emitResult({ action: "stop", ok: true, sandboxName: entry.sandboxName, lifecycleState: "stopped" });
     notify(
       `${adapter.title} Sandbox stopped`,
       `${entry.sandboxName} stopped successfully; its persistent filesystem was preserved.`,
@@ -380,34 +507,48 @@ async function runMapped(mode) {
   }
 }
 
-switch (actionId) {
-  case "connect-vercel":
-    await connectVercel();
-    break;
-  case "link-vercel-project":
-    await linkVercelProject();
-    break;
-  case "start-agent":
-    await startAgent();
-    break;
-  case "reconnect":
-    await runMapped("reconnect");
-    break;
-  case "apply-changes":
-    await runMapped("apply");
-    break;
-  case "stop":
-    await runMapped("stop");
-    break;
-  case "info":
-    await runMapped("info");
-    break;
-  case "replace-sandbox":
-    await replaceSandbox();
-    break;
-  case "forget-mapping":
-    await forgetMapping();
-    break;
-  default:
-    throw new Error(`Unknown plugin action: ${actionId}`);
+try {
+  switch (actionId) {
+    case "connect-vercel":
+      await connectVercel();
+      break;
+    case "link-vercel-project":
+      await linkVercelProject();
+      break;
+    case "start-agent":
+      await startAgent();
+      break;
+    case "reconnect":
+      await runMapped("reconnect");
+      break;
+    case "apply-changes":
+      await runMapped("apply");
+      break;
+    case "stop":
+      await runMapped("stop");
+      break;
+    case "info":
+      await runMapped("info");
+      break;
+    case "replace-sandbox":
+      await replaceSandbox();
+      break;
+    case "forget-mapping":
+      await forgetMapping();
+      break;
+    default:
+      throw new Error(`Unknown plugin action: ${actionId}`);
+  }
+} catch (error) {
+  // Failures must be machine-readable too; a silent nonzero exit is
+  // indistinguishable from a hang for an orchestrator.
+  if (!resultAlreadyEmitted()) {
+    emitResult({
+      action: actionId,
+      ok: false,
+      errorKind: errorKindOf(error),
+      message: String(error?.message ?? error).slice(0, 600),
+    });
+  }
+  throw error;
 }

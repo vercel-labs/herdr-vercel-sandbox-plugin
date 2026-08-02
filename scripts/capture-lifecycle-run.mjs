@@ -151,6 +151,23 @@ await rl.question("7/7 persistence: with the session reconnected, press Enter to
   ]);
 }
 
+const orchestrate = await rl.question("8/8 orchestrated (optional): press Enter to run a scripted Herdr agent round trip, or type skip: ");
+if (orchestrate.trim().toLowerCase() !== "skip") {
+  const herdrBin = process.env.HERDR_BIN_PATH ?? "herdr";
+  const promptText = "Reply with exactly: orchestration-check-ok";
+  const submitted = run(herdrBin, ["agent", "prompt", paneId, promptText, "--wait", "--until", "idle", "--timeout", "180000"], { capture: true, allowFailure: true });
+  const read = run(herdrBin, ["agent", "read", paneId, "--source", "recent"], { capture: true, allowFailure: true });
+  const tail = read.stdout.trim().split("\n").slice(-20).join("\n");
+  await record("orchestrated", [
+    `observedAt: ${new Date().toISOString()}`,
+    `prompt: ${promptText}`,
+    `promptExitStatus: ${submitted.status}`,
+    `readExitStatus: ${read.status}`,
+    `confirmed: ${tail.includes("orchestration-check-ok")}`,
+    `screen tail:\n${tail}`,
+  ]);
+}
+
 const entry = await paneEntry();
 await writeFile(path.join(runDir, "metadata.json"), `${JSON.stringify({
   agentVersion: entry.installedVersion?.match(/\d+\.\d+\.\d+/)?.[0] ?? entry.installedVersion,

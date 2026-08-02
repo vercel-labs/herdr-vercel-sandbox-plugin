@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { UPLOAD_APPROVAL_TTL_MS, readConfig } from "../src/lib.mjs";
+import { RESULT_MARKER, RESULT_SCHEMA_VERSION } from "../src/result.mjs";
 import { resolveAgentKind } from "../src/agents.mjs";
 import { codexAdapter } from "../src/adapters/codex.mjs";
 import { opencodeAdapter } from "../src/adapters/opencode.mjs";
@@ -55,6 +56,15 @@ test("README timing and version claims match the implementation", () => {
   }
   const tomlVersion = manifestToml.match(/^version = "([^"]+)"$/m)?.[1];
   assert.equal(tomlVersion, packageJson.version, "herdr-plugin.toml and package.json agree on the version");
+});
+
+test("the documented result-line contract matches the implementation", async () => {
+  const spec = await readFile(path.join(root, "docs", "v2-agent-orchestration.md"), "utf8");
+  for (const document of [readme, spec]) {
+    assert.ok(document.includes(RESULT_MARKER.trim()), "the marker prefix is documented verbatim");
+    assert.ok(document.includes(`"schemaVersion":${RESULT_SCHEMA_VERSION}`), "the documented schema version matches the code");
+  }
+  assert.ok(readme.includes("allowOrchestratedDeletion"), "the deletion opt-in is documented in the README");
 });
 
 test("the README custom-agent example uses only fields the profile validator accepts", () => {

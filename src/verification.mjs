@@ -170,18 +170,28 @@ export function verifyAdapterEvidence(adapter, options = {}) {
     throw new Error(`Executable behavior receipt does not match ${adapter.kind}@${adapter.pinnedVersion}.`);
   }
   const requiredPhases = ["install", "authenticate", "modify", "export", "stop", "reconnect", "persistence"];
+  const allowedPhases = new Set([...requiredPhases, "orchestrated"]);
   const phaseNames = receiptArtifact.phases?.map((phase) => phase.name) ?? [];
   if (new Set(phaseNames).size !== phaseNames.length) {
     throw new Error(`Executable behavior receipt has duplicate phases for ${adapter.kind}.`);
   }
   for (const phase of requiredPhases) {
-    const result = receiptArtifact.phases?.find((candidate) => candidate.name === phase);
-    if (!result || result.exitStatus !== 0 || !result.outputSha256 || !result.output) {
+    if (!phaseNames.includes(phase)) {
       throw new Error(`Executable behavior receipt is missing a passing ${phase} phase for ${adapter.kind}.`);
     }
-    const outputPath = resolveEvidencePath(result.output, `Behavior phase ${phase}`, evidenceRoot);
+  }
+  // Every recorded phase, including optional ones, is hash-verified; an
+  // unknown phase name fails closed rather than riding along unchecked.
+  for (const result of receiptArtifact.phases ?? []) {
+    if (!allowedPhases.has(result.name)) {
+      throw new Error(`Executable behavior receipt has an unsupported phase "${result.name}" for ${adapter.kind}.`);
+    }
+    if (result.exitStatus !== 0 || !result.outputSha256 || !result.output) {
+      throw new Error(`Executable behavior receipt is missing a passing ${result.name} phase for ${adapter.kind}.`);
+    }
+    const outputPath = resolveEvidencePath(result.output, `Behavior phase ${result.name}`, evidenceRoot);
     if (sha256(readFileSync(outputPath)) !== result.outputSha256) {
-      throw new Error(`Executable behavior receipt ${phase} output hash changed for ${adapter.kind}.`);
+      throw new Error(`Executable behavior receipt ${result.name} output hash changed for ${adapter.kind}.`);
     }
   }
   for (const claim of record.behaviorClaims ?? []) {

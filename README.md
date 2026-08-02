@@ -232,6 +232,41 @@ Permanent deletion is explicit and never part of stop, reconnect, or normal agen
 
 The initial upload is a filtered snapshot, not a live filesystem mount. It excludes `.git` and host GitHub/SSH credentials. Changes made remotely remain in the Sandbox until you explicitly apply a conflict-checked Git patch locally. The default authority path is: the remote agent edits and tests; the user applies; the outside orchestrator reviews and separately decides whether to commit and push. Direct GitHub credentials are not provided by default. Enabling such access must be a separate explicit capability and means remote code can act with the granted GitHub permissions. See [troubleshooting and recovery](docs/troubleshooting.md) for authentication policy, deleted Sandboxes, incomplete setup, moved worktrees, patch conflicts, and Herdr restarts.
 
+## driving the plugin from a local agent
+
+Because the bridge forwards the complete TUI and labels the pane for Herdr's
+agent detection, a local agent can drive Sandbox agents with the standard
+Herdr automation commands (`agent prompt --wait`, `agent wait --until idle`,
+`agent read`), and can invoke this plugin's actions directly:
+
+```bash
+herdr plugin action invoke start-agent --plugin vercel.sandbox
+herdr plugin log list --plugin vercel.sandbox
+```
+
+Every action prints a machine-readable result as the first line of its
+output, on success and on failure:
+
+```text
+HERDR_SANDBOX_RESULT: {"schemaVersion":1,"action":"apply-changes","ok":true,"result":"applied","exportCommit":"90a8014..."}
+```
+
+Herdr captures action output into its plugin log (`herdr plugin log list`
+returns it as JSON with exit codes and timestamps), so an orchestrator reads
+facts from the result line instead of scraping the screen. The
+`HERDR_SANDBOX_RESULT: ` prefix and the `schemaVersion` field are stable
+contracts. Failure lines carry `"ok":false` with an `errorKind` from the
+plugin's failure classifier.
+
+Destructive actions are gated: replace and forget refuse invocations whose
+`invocation_source` is not `"keybinding"` unless `"allowOrchestratedDeletion":
+true` is set in `config.json`. Out of the box an orchestrating agent can
+start, prompt, apply, and stop Sandboxes but cannot permanently delete them.
+An agent that simulates your keybinding chord arrives as a keybinding; the
+gate covers the sanctioned invocation path, not adversarial keystroke
+driving. Approval and confirmation gates (upload manifest, two-step deletion)
+apply to agents exactly as to humans.
+
 ## agent conformance
 
 The Sandbox bridge is shared. Each supported CLI contributes a small adapter containing its installation script, authentication and launch behavior, version command, capability declaration, and evidence for seven required checks.

@@ -367,7 +367,7 @@ export async function createWorkspaceArchive(root, options = {}) {
 // Documented user-facing keys plus accepted legacy spellings. Anything else is
 // rejected: a silently ignored key in this file can mean an unintended upload.
 const CONFIG_KEYS = new Set([
-  "agentKind", "agentArgs", "allowCandidateAgents", "customAgents",
+  "agentKind", "agentArgs", "allowCandidateAgents", "allowOrchestratedDeletion", "customAgents",
   "runtime", "timeout", "scope", "project", "projectConfigPath", "vercelBin",
   "uploadExcludes", "sensitiveFileOverrides",
   "uploadExclusions", "uploadOverrides",
@@ -402,6 +402,9 @@ export async function readConfig(configDir) {
   }
   if (config.allowCandidateAgents !== undefined && typeof config.allowCandidateAgents !== "boolean") {
     throw new Error("config.json allowCandidateAgents must be a boolean");
+  }
+  if (config.allowOrchestratedDeletion !== undefined && typeof config.allowOrchestratedDeletion !== "boolean") {
+    throw new Error("config.json allowOrchestratedDeletion must be a boolean");
   }
   if (config.agentArgs !== undefined) {
     if (!config.agentArgs || typeof config.agentArgs !== "object" || Array.isArray(config.agentArgs)) {

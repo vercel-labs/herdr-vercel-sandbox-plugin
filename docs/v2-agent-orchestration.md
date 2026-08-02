@@ -1,7 +1,9 @@
 # v2 spec: agent-readable output and local-agent orchestration
 
-Status: proposal, 2026-08-02. Targets plugin `0.5.0`. No behavior in this
-document is implemented yet unless explicitly marked shipped.
+Status: shipped in plugin `0.5.0` (2026-08-02), except the maintainer-side
+items listed under dependencies. The README section "driving the plugin from
+a local agent" is the user-facing contract; this document records the design
+and its evidence.
 
 ## Motivation
 

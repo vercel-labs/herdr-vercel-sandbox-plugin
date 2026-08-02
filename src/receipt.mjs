@@ -12,6 +12,11 @@ export const lifecyclePhases = [
   "persistence",
 ];
 
+// Optional phases are included when their output file exists; their absence
+// never fails a receipt. "orchestrated" records a scripted Herdr-agent-CLI
+// round trip proving the adapter can be driven by another agent.
+export const optionalLifecyclePhases = ["orchestrated"];
+
 const secretPatterns = [
   { label: "private key", pattern: /-----BEGIN (?:[A-Z0-9 ]+ )?PRIVATE KEY-----/i },
   { label: "authorization header", pattern: /\bauthorization\s*:\s*(?:bearer|basic)\s+\S+/i },
@@ -102,6 +107,14 @@ export async function buildLifecycleReceipt({ runDir, evidenceRoot, outputName }
     if (bytes.length === 0) throw new Error(`Lifecycle ${phase} output may not be empty.`);
     phaseBytes.set(phase, bytes);
   }
+  for (const phase of optionalLifecyclePhases) {
+    try {
+      const bytes = await readRegularFile(path.join(resolvedRunDir, "phases", `${phase}.txt`), `Lifecycle ${phase} output`);
+      if (bytes.length > 0) phaseBytes.set(phase, bytes);
+    } catch (error) {
+      if (!/is missing\.$/.test(String(error?.message ?? ""))) throw error;
+    }
+  }
 
   const outputDir = path.join(resolvedEvidenceRoot, "receipts", outputName);
   const relativeOutputDir = path.relative(resolvedEvidenceRoot, outputDir);
@@ -113,7 +126,7 @@ export async function buildLifecycleReceipt({ runDir, evidenceRoot, outputName }
   const transcriptPath = path.join(outputDir, "transcript.txt");
   await writeFile(transcriptPath, transcriptBytes, { flag: "wx" });
   const phases = [];
-  for (const phase of lifecyclePhases) {
+  for (const phase of [...lifecyclePhases, ...optionalLifecyclePhases].filter((name) => phaseBytes.has(name))) {
     const outputPath = path.join(outputDir, `${phase}.txt`);
     const bytes = phaseBytes.get(phase);
     await writeFile(outputPath, bytes, { flag: "wx" });

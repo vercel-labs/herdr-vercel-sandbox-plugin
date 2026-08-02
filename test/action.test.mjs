@@ -81,17 +81,26 @@ exit 0
     HERDR_PLUGIN_STATE_DIR: stateDir,
     HERDR_PLUGIN_CONFIG_DIR: configDir,
     HERDR_BIN_PATH: fakeHerdr,
-    HERDR_PLUGIN_CONTEXT_JSON: JSON.stringify({ focused_pane_id: PANE_ID, focused_pane_cwd: repo }),
+    HERDR_PLUGIN_CONTEXT_JSON: JSON.stringify({
+      focused_pane_id: PANE_ID,
+      focused_pane_cwd: repo,
+      invocation_source: options.invocationSource ?? "keybinding",
+    }),
     HERDR_FAKE_VERCEL_LOG: vercelLog,
     HERDR_FAKE_HERDR_LOG: herdrLog,
     HERDR_FAKE_REMOVE_FAILURE: options.removeFailure ? "1" : "0",
     HERDR_FAKE_PANE_RUN_FAILURE: options.paneRunFailure ? "1" : "0",
   };
-  return { dir, repo, stateDir, vercelLog, herdrLog, entry, env };
+  return { dir, repo, stateDir, configDir, vercelLog, herdrLog, entry, env };
 }
 
 function invoke(env) {
   return spawnSync(process.execPath, [ACTION], { env, encoding: "utf8" });
+}
+
+function parseResultLine(stdout) {
+  const line = stdout.split("\n").find((candidate) => candidate.startsWith("HERDR_SANDBOX_RESULT: "));
+  return line ? JSON.parse(line.slice("HERDR_SANDBOX_RESULT: ".length)) : null;
 }
 
 test("replacement requires confirmation, deletes with the saved target, and records a provisional successor", async () => {
@@ -100,10 +109,19 @@ test("replacement requires confirmation, deletes with the saved target, and reco
     const first = invoke(f.env);
     assert.equal(first.status, 0, first.stderr);
     assert.match(first.stdout, /No Sandbox was changed/);
+    const armed = parseResultLine(first.stdout);
+    assert.equal(armed.schemaVersion, 1);
+    assert.equal(armed.phase, "armed");
+    assert.deepEqual(armed.sandboxNames, [f.entry.sandboxName]);
+    assert.ok(Date.parse(armed.confirmDeadline) > Date.now());
     await assert.rejects(readFile(f.vercelLog, "utf8"));
 
     const second = invoke(f.env);
     assert.equal(second.status, 0, second.stderr);
+    const deleted = parseResultLine(second.stdout);
+    assert.equal(deleted.phase, "deleted");
+    assert.deepEqual(deleted.deletedSandboxNames, [f.entry.sandboxName]);
+    assert.notEqual(deleted.sandboxName, f.entry.sandboxName);
     const calls = await readFile(f.vercelLog, "utf8");
     assert.match(calls, new RegExp(`sandbox remove --scope team_saved --project project_saved ${f.entry.sandboxName}`));
 
@@ -119,6 +137,45 @@ test("replacement requires confirmation, deletes with the saved target, and reco
 
     const herdrCalls = await readFile(f.herdrLog, "utf8");
     assert.match(herdrCalls, /pane run w0:p5 .*bridge\.mjs' 'start' /);
+  } finally {
+    await rm(f.dir, { recursive: true, force: true });
+  }
+});
+
+test("orchestrated deletion is blocked by default and allowed only with the explicit opt-in", async () => {
+  const f = await fixture({ invocationSource: "cli" });
+  try {
+    const blocked = invoke(f.env);
+    assert.notEqual(blocked.status, 0, "cli-invoked deletion must fail without the opt-in");
+    assert.match(blocked.stderr, /allowOrchestratedDeletion/);
+    const result = parseResultLine(blocked.stdout);
+    assert.equal(result.ok, false);
+    assert.equal(result.errorKind, "permission");
+    await assert.rejects(readFile(f.vercelLog, "utf8"), undefined, "no Vercel command may run");
+
+    await writeFile(path.join(f.configDir, "config.json"), JSON.stringify({
+      vercelBin: path.join(f.dir, "vercel"),
+      customAgents: { "fixture-agent": PROFILE },
+      allowOrchestratedDeletion: true,
+    }));
+    const armed = invoke(f.env);
+    assert.equal(armed.status, 0, armed.stderr);
+    assert.equal(parseResultLine(armed.stdout).phase, "armed");
+  } finally {
+    await rm(f.dir, { recursive: true, force: true });
+  }
+});
+
+test("failures emit a machine-readable result line", async () => {
+  const f = await fixture();
+  try {
+    const env = { ...f.env, HERDR_PLUGIN_ACTION_ID: "reconnect", HERDR_PLUGIN_CONTEXT_JSON: JSON.stringify({ focused_pane_id: "w9:p9", invocation_source: "cli" }) };
+    const result = invoke(env);
+    assert.notEqual(result.status, 0);
+    const parsed = parseResultLine(result.stdout);
+    assert.equal(parsed.ok, false);
+    assert.equal(parsed.action, "reconnect");
+    assert.match(parsed.message, /No Vercel Sandbox is mapped/);
   } finally {
     await rm(f.dir, { recursive: true, force: true });
   }
