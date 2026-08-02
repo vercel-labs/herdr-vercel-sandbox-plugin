@@ -114,9 +114,10 @@ A documented recipe with the signals an orchestrator should trust:
 - In-agent status (working, blocked on a permission prompt, idle) comes from
   Herdr's `agent wait --until ...`, which is Herdr's contract to maintain.
 - Reference flow: start → parse manifest result → re-invoke start to approve →
-  wait for `phase:"started"` → `agent wait --until idle` → `agent prompt
-  --wait` → `agent wait --until idle` → apply-changes → parse `result` →
-  stop.
+  receive `phase:"setup-launched"` → poll `info` until `remoteCreated:true` and
+  `lifecycleState:"ready"` (or surface `lastError`) → `agent wait --until idle`
+  → `agent prompt --wait` → `agent wait --until idle` → apply-changes → parse
+  `result` → stop.
 - Fan-out: one worktree can host many panes; each start creates an isolated
   Sandbox under the same approved manifest digest. Concurrency limits are
   Vercel-account-level and must be documented from measured behavior, not
