@@ -1,6 +1,6 @@
 {
   "name": "herdr-vercel-sandbox-plugin",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,7 @@
     "verify:adapters": "node scripts/check-adapters.mjs",
     "verify:sources:remote": "node scripts/check-remote-sources.mjs",
     "build:lifecycle-receipt": "node scripts/build-lifecycle-receipt.mjs",
-    "check": "node --check src/action.mjs && node --check src/agents.mjs && node --check src/verification.mjs && node --check src/receipt.mjs && node --check src/adapters/codex.mjs && node --check src/adapters/opencode.mjs && node --check src/adapters/claude-code.mjs && node --check src/bridge.mjs && node --check src/lib.mjs && node --check src/onboarding.mjs && node --check scripts/check-adapters.mjs && node --check scripts/check-remote-sources.mjs && node --check scripts/build-lifecycle-receipt.mjs && node --check scripts/capture-lifecycle-run.mjs && node --test && node scripts/check-adapters.mjs"
+    "check": "node --check src/action.mjs && node --check src/action-main.mjs && node --check src/result.mjs && node --check src/agents.mjs && node --check src/verification.mjs && node --check src/receipt.mjs && node --check src/adapters/codex.mjs && node --check src/adapters/opencode.mjs && node --check src/adapters/claude-code.mjs && node --check src/bridge.mjs && node --check src/lib.mjs && node --check src/onboarding.mjs && node --check scripts/check-adapters.mjs && node --check scripts/check-remote-sources.mjs && node --check scripts/build-lifecycle-receipt.mjs && node --check scripts/capture-lifecycle-run.mjs && node --test && node scripts/check-adapters.mjs"
   },
   "engines": {
     "node": ">=20"

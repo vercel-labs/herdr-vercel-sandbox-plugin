@@ -241,6 +241,7 @@ Herdr automation commands (`agent prompt --wait`, `agent wait --until idle`,
 
 ```bash
 herdr plugin action invoke start-agent --plugin vercel.sandbox
+# then poll, selecting the log_id returned by invoke:
 herdr plugin log list --plugin vercel.sandbox
 ```
 
@@ -251,21 +252,30 @@ output, on success and on failure:
 HERDR_SANDBOX_RESULT: {"schemaVersion":1,"action":"apply-changes","ok":true,"result":"applied","exportCommit":"90a8014..."}
 ```
 
-Herdr captures action output into its plugin log (`herdr plugin log list`
-returns it as JSON with exit codes and timestamps), so an orchestrator reads
-facts from the result line instead of scraping the screen. The
-`HERDR_SANDBOX_RESULT: ` prefix and the `schemaVersion` field are stable
-contracts. Failure lines carry `"ok":false` with an `errorKind` from the
-plugin's failure classifier.
+Herdr runs actions asynchronously and captures their output into its plugin
+log. Read the result by polling: `invoke` returns a `log_id`, then poll
+`herdr plugin log list` for that record until its `status` is `succeeded` or
+`failed`, and parse the marker from its `stdout`. A single immediate `log list`
+can return a `running` record with no output yet. The `HERDR_SANDBOX_RESULT: `
+prefix and `schemaVersion` are stable contracts; the marker is always the first
+stdout line, even on startup failures. Failure lines carry `"ok":false` with an
+`errorKind`.
 
-Destructive actions are gated: replace and forget refuse invocations whose
-`invocation_source` is not `"keybinding"` unless `"allowOrchestratedDeletion":
-true` is set in `config.json`. Out of the box an orchestrating agent can
-start, prompt, apply, and stop Sandboxes but cannot permanently delete them.
-An agent that simulates your keybinding chord arrives as a keybinding; the
-gate covers the sanctioned invocation path, not adversarial keystroke
-driving. Approval and confirmation gates (upload manifest, two-step deletion)
-apply to agents exactly as to humans.
+`start-agent` returns `phase:"setup-launched"`, which means setup was launched
+in a new pane, not that the Sandbox exists. The bridge creates the Sandbox
+asynchronously; poll `info` for `remoteCreated` and `lifecycleState` to learn
+whether creation and setup actually succeeded.
+
+Destructive actions have a default-deny guard: replace and forget refuse
+non-`"keybinding"` invocations unless `"allowOrchestratedDeletion": true` is
+set in `config.json`, so a sanctioned orchestrator cannot delete Sandboxes by
+default. This is friction against accidental deletion, NOT a security boundary:
+Herdr lets a raw socket caller forge the `invocation_source`, and a local agent
+can also launch the action with forged environment variables or edit
+`config.json` itself. Do not rely on it to contain an adversarial local agent;
+a real boundary must be enforced by Herdr outside agent-controlled paths. The
+upload-manifest approval and two-step deletion confirmation apply to agents
+exactly as to humans.
 
 ## agent conformance
 

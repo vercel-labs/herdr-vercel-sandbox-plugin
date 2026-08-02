@@ -8,6 +8,12 @@ import { createPaneStateEntry, loadState, saveState } from "../src/lib.mjs";
 
 const ACTION = path.resolve("src/action.mjs");
 const PANE_ID = "w0:p5";
+
+function markerLines(stdout) {
+  const lines = stdout.split("\n");
+  const indices = lines.map((line, index) => [line, index]).filter(([line]) => line.startsWith("HERDR_SANDBOX_RESULT: "));
+  return { count: indices.length, firstIndex: indices[0]?.[1], lines: indices.map(([line]) => line) };
+}
 const PROFILE = {
   title: "Fixture Agent",
   installationCommand: "true",
@@ -176,6 +182,51 @@ test("failures emit a machine-readable result line", async () => {
     assert.equal(parsed.ok, false);
     assert.equal(parsed.action, "reconnect");
     assert.match(parsed.message, /No Vercel Sandbox is mapped/);
+    const marks = markerLines(result.stdout);
+    assert.equal(marks.count, 1, "exactly one marker on failure");
+    assert.equal(marks.firstIndex, 0, "marker is the first stdout line");
+  } finally {
+    await rm(f.dir, { recursive: true, force: true });
+  }
+});
+
+test("startup failures still emit a first-line marker (missing env, invalid context)", async () => {
+  const missingEnv = spawnSync(process.execPath, [ACTION], {
+    env: { ...process.env, HERDR_PLUGIN_ACTION_ID: "", HERDR_PLUGIN_STATE_DIR: "", HERDR_PLUGIN_CONFIG_DIR: "" },
+    encoding: "utf8",
+  });
+  assert.notEqual(missingEnv.status, 0);
+  const a = markerLines(missingEnv.stdout);
+  assert.equal(a.count, 1);
+  assert.equal(a.firstIndex, 0);
+  assert.equal(parseResultLine(missingEnv.stdout).ok, false);
+
+  const badContext = spawnSync(process.execPath, [ACTION], {
+    env: {
+      ...process.env,
+      HERDR_PLUGIN_ACTION_ID: "info",
+      HERDR_PLUGIN_STATE_DIR: "/tmp",
+      HERDR_PLUGIN_CONFIG_DIR: "/tmp",
+      HERDR_PLUGIN_CONTEXT_JSON: "{not valid json",
+    },
+    encoding: "utf8",
+  });
+  assert.notEqual(badContext.status, 0);
+  const b = markerLines(badContext.stdout);
+  assert.equal(b.count, 1);
+  assert.equal(b.firstIndex, 0);
+});
+
+test("child output never precedes the marker on a success path", async () => {
+  // The stop path runs a child bridge that prints to stdout; the marker must
+  // still be line 0.
+  const f = await fixture();
+  try {
+    const stopEnv = { ...f.env, HERDR_PLUGIN_ACTION_ID: "stop" };
+    const result = invoke(stopEnv);
+    const marks = markerLines(result.stdout);
+    assert.equal(marks.count, 1, "exactly one marker");
+    assert.equal(marks.firstIndex, 0, "marker precedes all child output");
   } finally {
     await rm(f.dir, { recursive: true, force: true });
   }

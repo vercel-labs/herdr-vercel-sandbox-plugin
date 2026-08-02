@@ -347,6 +347,13 @@ function info() {
     capabilities: entry.capabilities ?? adapter.capabilities,
     adapterStatus: entry.adapterStatus ?? supportedStatus(adapter),
     prepared: entry.prepared,
+    // Lifecycle fields let an orchestrator poll for actual remote state after
+    // start, instead of trusting the launch-time "setup-launched" result.
+    remoteCreated: Boolean(entry.remoteCreated),
+    lifecycleState: entry.lifecycleState ?? (entry.prepared ? "ready" : "provisional"),
+    lastError: entry.lastError
+      ? { operation: entry.lastError.operation, kind: entry.lastError.kind, at: entry.lastError.at }
+      : null,
     localRoot: entry.localRoot,
     localCwd: entry.localCwd,
     remoteRoot,

@@ -68,16 +68,16 @@
           "authority": "first-party",
           "sourceClassification": "official-product-documentation",
           "verificationMethod": "exact-text-and-sha256-v1",
-          "retrievedAt": "2026-08-01",
+          "retrievedAt": "2026-08-02",
           "freshness": {
             "mode": "remote",
             "sourceUrl": "https://opencode.ai/docs/",
-            "checkedAt": "2026-08-01T20:39:43.624Z",
+            "checkedAt": "2026-08-02T00:00:00.000Z",
             "checkIntervalDays": 90,
-            "upstreamSha256": "5c206b7c388f7ee3c00b5859989dd6675afb675aebd7b0925ccfc04150777801"
+            "upstreamSha256": "c0e6571ef563565170540c6c00e00f73df3f67c02c42a58c48b31e114e6b6bfc"
           },
           "capture": "sources/opencode-install.txt",
-          "captureSha256": "5c206b7c388f7ee3c00b5859989dd6675afb675aebd7b0925ccfc04150777801",
+          "captureSha256": "c0e6571ef563565170540c6c00e00f73df3f67c02c42a58c48b31e114e6b6bfc",
           "quote": "npm install -g opencode-ai",
           "quoteSha256": "7780c2f71a1569116b1294b82c74e11097549521be90cd5004622c79453610f0"
         },
@@ -86,16 +86,16 @@
           "authority": "first-party",
           "sourceClassification": "official-product-documentation",
           "verificationMethod": "exact-text-and-sha256-v1",
-          "retrievedAt": "2026-08-01",
+          "retrievedAt": "2026-08-02",
           "freshness": {
             "mode": "remote",
             "sourceUrl": "https://opencode.ai/docs/cli/",
-            "checkedAt": "2026-08-01T20:39:43.624Z",
+            "checkedAt": "2026-08-02T00:00:00.000Z",
             "checkIntervalDays": 90,
-            "upstreamSha256": "3ef0ef905ba93f9d978bf01d61cd94c31894280165559c1a7258718289ec8559"
+            "upstreamSha256": "a54a1e93eb72084c368b491dec02dfa28978280647e45f1222dc63370bc9ac19"
           },
           "capture": "sources/opencode-cli.txt",
-          "captureSha256": "3ef0ef905ba93f9d978bf01d61cd94c31894280165559c1a7258718289ec8559",
+          "captureSha256": "a54a1e93eb72084c368b491dec02dfa28978280647e45f1222dc63370bc9ac19",
           "quote": "opencode auth login",
           "quoteSha256": "d6e307d11e49a9fd118b10f4b13958d04c178bbf6f90695fdccb8a0ffb9c245a"
         },
@@ -104,16 +104,16 @@
           "authority": "first-party",
           "sourceClassification": "official-product-documentation",
           "verificationMethod": "exact-text-and-sha256-v1",
-          "retrievedAt": "2026-08-01",
+          "retrievedAt": "2026-08-02",
           "freshness": {
             "mode": "remote",
             "sourceUrl": "https://opencode.ai/docs/cli/",
-            "checkedAt": "2026-08-01T20:39:43.624Z",
+            "checkedAt": "2026-08-02T00:00:00.000Z",
             "checkIntervalDays": 90,
-            "upstreamSha256": "3ef0ef905ba93f9d978bf01d61cd94c31894280165559c1a7258718289ec8559"
+            "upstreamSha256": "a54a1e93eb72084c368b491dec02dfa28978280647e45f1222dc63370bc9ac19"
           },
           "capture": "sources/opencode-cli.txt",
-          "captureSha256": "3ef0ef905ba93f9d978bf01d61cd94c31894280165559c1a7258718289ec8559",
+          "captureSha256": "a54a1e93eb72084c368b491dec02dfa28978280647e45f1222dc63370bc9ac19",
           "quote": "Lists all the authenticated providers as stored in the credentials file.",
           "quoteSha256": "9ec213523ef78e4d62500bcc6b00158b5a4948d22a72df91f408ec6ceeda4717"
         }

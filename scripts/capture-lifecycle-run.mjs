@@ -158,14 +158,25 @@ if (orchestrate.trim().toLowerCase() !== "skip") {
   const submitted = run(herdrBin, ["agent", "prompt", paneId, promptText, "--wait", "--until", "idle", "--timeout", "180000"], { capture: true, allowFailure: true });
   const read = run(herdrBin, ["agent", "read", paneId, "--source", "recent"], { capture: true, allowFailure: true });
   const tail = read.stdout.trim().split("\n").slice(-20).join("\n");
-  await record("orchestrated", [
-    `observedAt: ${new Date().toISOString()}`,
-    `prompt: ${promptText}`,
-    `promptExitStatus: ${submitted.status}`,
-    `readExitStatus: ${read.status}`,
-    `confirmed: ${tail.includes("orchestration-check-ok")}`,
-    `screen tail:\n${tail}`,
-  ]);
+  const confirmed = submitted.status === 0 && read.status === 0 && tail.includes("orchestration-check-ok");
+  // The presence of an orchestrated phase in a receipt certifies success, so
+  // only a fully successful round trip is recorded. A failed round trip is
+  // reported and left out; it must never be packaged as a passing phase.
+  if (confirmed) {
+    await record("orchestrated", [
+      `observedAt: ${new Date().toISOString()}`,
+      `prompt: ${promptText}`,
+      `promptExitStatus: ${submitted.status}`,
+      `readExitStatus: ${read.status}`,
+      `confirmed: true`,
+      `screen tail:\n${tail}`,
+    ]);
+  } else {
+    console.log(
+      `Orchestrated round trip did NOT confirm (prompt exit ${submitted.status}, read exit ${read.status}, `
+      + `response seen: ${tail.includes("orchestration-check-ok")}). Not recording the phase; re-run to certify orchestration.`,
+    );
+  }
 }
 
 const entry = await paneEntry();
