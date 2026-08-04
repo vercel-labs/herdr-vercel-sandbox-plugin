@@ -25,7 +25,7 @@ Clean-profile verification completed on 2026-07-31 with Herdr 0.7.5. With isolat
 ## 3. Recovery and troubleshooting
 
 - [x] Authentication-policy failures are documented.
-- [x] Replacement and mapping removal use explicit two-invocation permanent deletion and retain state on partial failure.
+- [x] Replacement and mapping removal require an explicit human confirmation popup and retain state on cancellation or partial failure.
 - [x] Patch conflicts fail before local mutation.
 - [x] Detach and full-server-restart behavior are distinguished.
 - [x] Stale mappings cannot be forgotten until tracked remote Sandboxes are deleted or confirmed already absent.
@@ -35,7 +35,7 @@ Clean-profile verification completed on 2026-07-31 with Herdr 0.7.5. With isolat
 
 - [x] Canonical target selected: `vercel-labs/herdr-vercel-sandbox-plugin`.
 - [x] GitHub installation and Herdr marketplace discovery steps are documented.
-- [x] Versioning begins at `0.2.0`; deletion ships as `0.2.1`, account/project onboarding as `0.3.0`, the 2026-08-01 review fixes (config contract, evidence demotion, output-checked stop, incremental apply, custom-agent gate, docs regenerated from code with parity tests) as `0.4.0`, and the plugin follows pre-1.0 semantic versioning.
+- [x] Versioning begins at `0.2.0`; deletion ships as `0.2.1`, account/project onboarding as `0.3.0`, the 2026-08-01 review fixes (config contract, evidence demotion, output-checked stop, incremental apply, custom-agent gate, docs regenerated from code with parity tests) as `0.4.0`, agent-readable orchestration as `0.5.0`, its review fixes as `0.5.1`, and popup-backed human deletion confirmation as `0.6.0`. The plugin follows pre-1.0 semantic versioning.
 - [x] Repository created under `vercel-labs` (public, 2026-08-01): <https://github.com/vercel-labs/herdr-vercel-sandbox-plugin>.
 - [ ] License and repository governance confirmed by the owning team (the public repository currently ships no LICENSE file).
 - [ ] Repository topic `herdr-plugin` added and marketplace listing observed (deliberately deferred; not part of this publication).

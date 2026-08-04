@@ -1,26 +1,26 @@
 {
-  "schemaVersion": 3,
-  "generatedAt": "2026-08-01T20:39:43.624Z",
+  "schemaVersion": 4,
+  "generatedAt": "2026-08-04T17:15:00.000Z",
   "adapters": {
     "codex-0.146.0": {
       "kind": "codex",
       "version": "0.146.0",
       "sources": [
         {
-          "canonicalUrl": "https://developers.openai.com/codex/cli/",
+          "repositorySource": {
+            "repository": "https://github.com/openai/codex",
+            "commit": "e363b08c9175ac1cbe5893615dd2cb9ddf95043b",
+            "path": "README.md"
+          },
           "authority": "first-party",
           "sourceClassification": "official-product-documentation",
           "verificationMethod": "exact-text-and-sha256-v1",
-          "retrievedAt": "2026-08-01",
+          "retrievedAt": "2026-08-04",
           "freshness": {
-            "mode": "remote",
-            "sourceUrl": "https://developers.openai.com/codex/cli.md",
-            "checkedAt": "2026-08-01T20:39:43.624Z",
-            "checkIntervalDays": 90,
-            "upstreamSha256": "4592869a38de248eef8c623816032bc34787c7797fcf7a64e41d860da83d1a5e"
+            "mode": "immutable-snapshot"
           },
-          "capture": "sources/codex-cli.txt",
-          "captureSha256": "4592869a38de248eef8c623816032bc34787c7797fcf7a64e41d860da83d1a5e",
+          "capture": "sources/codex-readme-0.146.0.md",
+          "captureSha256": "ba4e1f69ff48386e72a9c5e1edaf76aad64a475c2d51af79ccba6d1128261ba7",
           "quote": "npm install -g @openai/codex",
           "quoteSha256": "f8066b1dad28fb32f8d57d372ac70e7b3ec82a0736e8e3ae6ccc1fe880c7da7f"
         },
@@ -64,56 +64,56 @@
       "version": "1.18.9",
       "sources": [
         {
-          "canonicalUrl": "https://opencode.ai/docs/",
+          "repositorySource": {
+            "repository": "https://github.com/anomalyco/opencode",
+            "commit": "4da7bb44c84e013fa53e9c5d02ac753d1435c81a",
+            "path": "packages/web/src/content/docs/index.mdx"
+          },
           "authority": "first-party",
           "sourceClassification": "official-product-documentation",
           "verificationMethod": "exact-text-and-sha256-v1",
-          "retrievedAt": "2026-08-02",
+          "retrievedAt": "2026-08-04",
           "freshness": {
-            "mode": "remote",
-            "sourceUrl": "https://opencode.ai/docs/",
-            "checkedAt": "2026-08-02T00:00:00.000Z",
-            "checkIntervalDays": 90,
-            "upstreamSha256": "c0e6571ef563565170540c6c00e00f73df3f67c02c42a58c48b31e114e6b6bfc"
+            "mode": "immutable-snapshot"
           },
-          "capture": "sources/opencode-install.txt",
-          "captureSha256": "c0e6571ef563565170540c6c00e00f73df3f67c02c42a58c48b31e114e6b6bfc",
+          "capture": "sources/opencode-index-1.18.9.mdx",
+          "captureSha256": "24965a7337d45325edb9ba6ca44e4b528b7e1ead00134794b3202745f1e1bd9d",
           "quote": "npm install -g opencode-ai",
           "quoteSha256": "7780c2f71a1569116b1294b82c74e11097549521be90cd5004622c79453610f0"
         },
         {
-          "canonicalUrl": "https://opencode.ai/docs/cli/",
+          "repositorySource": {
+            "repository": "https://github.com/anomalyco/opencode",
+            "commit": "4da7bb44c84e013fa53e9c5d02ac753d1435c81a",
+            "path": "packages/web/src/content/docs/cli.mdx"
+          },
           "authority": "first-party",
           "sourceClassification": "official-product-documentation",
           "verificationMethod": "exact-text-and-sha256-v1",
-          "retrievedAt": "2026-08-02",
+          "retrievedAt": "2026-08-04",
           "freshness": {
-            "mode": "remote",
-            "sourceUrl": "https://opencode.ai/docs/cli/",
-            "checkedAt": "2026-08-02T00:00:00.000Z",
-            "checkIntervalDays": 90,
-            "upstreamSha256": "a54a1e93eb72084c368b491dec02dfa28978280647e45f1222dc63370bc9ac19"
+            "mode": "immutable-snapshot"
           },
-          "capture": "sources/opencode-cli.txt",
-          "captureSha256": "a54a1e93eb72084c368b491dec02dfa28978280647e45f1222dc63370bc9ac19",
+          "capture": "sources/opencode-cli-1.18.9.mdx",
+          "captureSha256": "a6ed4d307713067695a7cfc141c2f4f0b25f9ac95ac252f651eb0bb6d1b591ef",
           "quote": "opencode auth login",
           "quoteSha256": "d6e307d11e49a9fd118b10f4b13958d04c178bbf6f90695fdccb8a0ffb9c245a"
         },
         {
-          "canonicalUrl": "https://opencode.ai/docs/cli/",
+          "repositorySource": {
+            "repository": "https://github.com/anomalyco/opencode",
+            "commit": "4da7bb44c84e013fa53e9c5d02ac753d1435c81a",
+            "path": "packages/web/src/content/docs/cli.mdx"
+          },
           "authority": "first-party",
           "sourceClassification": "official-product-documentation",
           "verificationMethod": "exact-text-and-sha256-v1",
-          "retrievedAt": "2026-08-02",
+          "retrievedAt": "2026-08-04",
           "freshness": {
-            "mode": "remote",
-            "sourceUrl": "https://opencode.ai/docs/cli/",
-            "checkedAt": "2026-08-02T00:00:00.000Z",
-            "checkIntervalDays": 90,
-            "upstreamSha256": "a54a1e93eb72084c368b491dec02dfa28978280647e45f1222dc63370bc9ac19"
+            "mode": "immutable-snapshot"
           },
-          "capture": "sources/opencode-cli.txt",
-          "captureSha256": "a54a1e93eb72084c368b491dec02dfa28978280647e45f1222dc63370bc9ac19",
+          "capture": "sources/opencode-cli-1.18.9.mdx",
+          "captureSha256": "a6ed4d307713067695a7cfc141c2f4f0b25f9ac95ac252f651eb0bb6d1b591ef",
           "quote": "Lists all the authenticated providers as stored in the credentials file.",
           "quoteSha256": "9ec213523ef78e4d62500bcc6b00158b5a4948d22a72df91f408ec6ceeda4717"
         }
@@ -141,20 +141,20 @@
       "version": "2.1.220",
       "sources": [
         {
-          "canonicalUrl": "https://code.claude.com/docs/en/installation",
+          "repositorySource": {
+            "repository": "https://github.com/anthropics/claude-code",
+            "commit": "7ef6eec9d9ba84ea6f233f26c45f1df5c5991843",
+            "path": "README.md"
+          },
           "authority": "first-party",
           "sourceClassification": "official-product-documentation",
           "verificationMethod": "exact-text-and-sha256-v1",
-          "retrievedAt": "2026-08-01",
+          "retrievedAt": "2026-08-04",
           "freshness": {
-            "mode": "remote",
-            "sourceUrl": "https://code.claude.com/docs/en/installation.md",
-            "checkedAt": "2026-08-01T20:39:43.624Z",
-            "checkIntervalDays": 90,
-            "upstreamSha256": "22d94bf028d677c9069d0ccfba5c8feccf665460ebd4b3db5acbc1ab4b3e46c4"
+            "mode": "immutable-snapshot"
           },
-          "capture": "sources/claude-installation-current.txt",
-          "captureSha256": "22d94bf028d677c9069d0ccfba5c8feccf665460ebd4b3db5acbc1ab4b3e46c4",
+          "capture": "sources/claude-code-readme-2.1.220.md",
+          "captureSha256": "aa0d8b80ac083e1591be0789273f447058cc9187b4331634a5614155da27778d",
           "quote": "npm install -g @anthropic-ai/claude-code",
           "quoteSha256": "ea20fb261fee49d55a6ebb3d144b074061a29f93d84b8e06a437934f0d7410fe"
         },
@@ -163,16 +163,16 @@
           "authority": "first-party",
           "sourceClassification": "official-product-documentation",
           "verificationMethod": "exact-text-and-sha256-v1",
-          "retrievedAt": "2026-08-01",
+          "retrievedAt": "2026-08-04",
           "freshness": {
             "mode": "remote",
             "sourceUrl": "https://code.claude.com/docs/en/authentication.md",
-            "checkedAt": "2026-08-01T20:39:43.624Z",
+            "checkedAt": "2026-08-04T17:15:00.000Z",
             "checkIntervalDays": 90,
-            "upstreamSha256": "caba7cf60119cada4dff8dc9b5f82df5ab4a825ad7a59d7b6038c2934032155d"
+            "upstreamSha256": "b7cb2673f7018b8f4fd9ada42bfe948ec70f2ba6ca2e7dcdfccdf87c079f3f25"
           },
           "capture": "sources/claude-authentication-current.txt",
-          "captureSha256": "caba7cf60119cada4dff8dc9b5f82df5ab4a825ad7a59d7b6038c2934032155d",
+          "captureSha256": "b7cb2673f7018b8f4fd9ada42bfe948ec70f2ba6ca2e7dcdfccdf87c079f3f25",
           "quote": "run `claude` in your terminal. On first launch, Claude Code opens a browser window for you to log in.",
           "quoteSha256": "7094a10e91c757bedcfc1ab54999d9d674befe7bc27e0a6d3b091670482399a7"
         },
@@ -181,16 +181,16 @@
           "authority": "first-party",
           "sourceClassification": "official-product-documentation",
           "verificationMethod": "exact-text-and-sha256-v1",
-          "retrievedAt": "2026-08-01",
+          "retrievedAt": "2026-08-04",
           "freshness": {
             "mode": "remote",
             "sourceUrl": "https://code.claude.com/docs/en/authentication.md",
-            "checkedAt": "2026-08-01T20:39:43.624Z",
+            "checkedAt": "2026-08-04T17:15:00.000Z",
             "checkIntervalDays": 90,
-            "upstreamSha256": "caba7cf60119cada4dff8dc9b5f82df5ab4a825ad7a59d7b6038c2934032155d"
+            "upstreamSha256": "b7cb2673f7018b8f4fd9ada42bfe948ec70f2ba6ca2e7dcdfccdf87c079f3f25"
           },
           "capture": "sources/claude-authentication-current.txt",
-          "captureSha256": "caba7cf60119cada4dff8dc9b5f82df5ab4a825ad7a59d7b6038c2934032155d",
+          "captureSha256": "b7cb2673f7018b8f4fd9ada42bfe948ec70f2ba6ca2e7dcdfccdf87c079f3f25",
           "quote": "This happens when the browser can't reach Claude Code's local callback server, which is common in WSL2, SSH sessions, and containers.",
           "quoteSha256": "5f99d66dd4968f4565059d373b63a0bb9cd869681453c0b5527e1f1cc2209d8e"
         },
@@ -199,16 +199,16 @@
           "authority": "first-party",
           "sourceClassification": "official-product-documentation",
           "verificationMethod": "exact-text-and-sha256-v1",
-          "retrievedAt": "2026-08-01",
+          "retrievedAt": "2026-08-04",
           "freshness": {
             "mode": "remote",
             "sourceUrl": "https://code.claude.com/docs/en/authentication.md",
-            "checkedAt": "2026-08-01T20:39:43.624Z",
+            "checkedAt": "2026-08-04T17:15:00.000Z",
             "checkIntervalDays": 90,
-            "upstreamSha256": "caba7cf60119cada4dff8dc9b5f82df5ab4a825ad7a59d7b6038c2934032155d"
+            "upstreamSha256": "b7cb2673f7018b8f4fd9ada42bfe948ec70f2ba6ca2e7dcdfccdf87c079f3f25"
           },
           "capture": "sources/claude-authentication-current.txt",
-          "captureSha256": "caba7cf60119cada4dff8dc9b5f82df5ab4a825ad7a59d7b6038c2934032155d",
+          "captureSha256": "b7cb2673f7018b8f4fd9ada42bfe948ec70f2ba6ca2e7dcdfccdf87c079f3f25",
           "quote": "If you've set the `CLAUDE_CONFIG_DIR` environment variable on Linux or Windows, the `.credentials.json` file lives under that directory instead.",
           "quoteSha256": "a6ac3648d7d703793cd86283b5de0f340f345965525bf91f4d05c85535b67062"
         }

@@ -5,13 +5,47 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const defaultManifestPath = path.join(root, "verification", "adapters.json");
-const REQUIRED_MANIFEST_SCHEMA = 3;
+const REQUIRED_MANIFEST_SCHEMA = 4;
 const REQUIRED_SOURCE_METHOD = "exact-text-and-sha256-v1";
 const REQUIRED_SOURCE_AUTHORITY = "first-party";
 const REQUIRED_SOURCE_CLASSIFICATION = "official-product-documentation";
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function immutableRepositoryUrl(source, label) {
+  const repositorySource = source.repositorySource;
+  const match = repositorySource?.repository?.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)$/);
+  if (!match) throw new Error(`${label} has no valid first-party GitHub repository.`);
+  if (!/^[a-f0-9]{40}$/.test(repositorySource.commit ?? "")) {
+    throw new Error(`${label} has no full immutable commit SHA.`);
+  }
+  if (typeof repositorySource.path !== "string"
+    || repositorySource.path.length === 0
+    || repositorySource.path.startsWith("/")
+    || repositorySource.path.split("/").includes("..")) {
+    throw new Error(`${label} has no safe repository source path.`);
+  }
+  return `https://raw.githubusercontent.com/${match[1]}/${repositorySource.commit}/${repositorySource.path}`;
+}
+
+function sourceRemoteContract(source, label) {
+  const hasCanonicalUrl = typeof source.canonicalUrl === "string";
+  const hasRepositorySource = source.repositorySource !== undefined;
+  if (hasCanonicalUrl === hasRepositorySource) {
+    throw new Error(`${label} must declare exactly one canonical URL or immutable repository source.`);
+  }
+  if (source.freshness?.mode === "immutable-snapshot") {
+    if (!hasRepositorySource) throw new Error(`${label} immutable freshness requires a repository source.`);
+    return { url: immutableRepositoryUrl(source, label), expectedSha256: source.captureSha256, immutable: true };
+  }
+  if (source.freshness?.mode !== "remote" || !hasCanonicalUrl) {
+    throw new Error(`${label} has no valid remote freshness contract.`);
+  }
+  const url = source.freshness?.sourceUrl ?? source.canonicalUrl;
+  if (!/^https:\/\//.test(url ?? "")) throw new Error(`${label} has no remote HTTPS source URL.`);
+  return { url, expectedSha256: source.freshness?.upstreamSha256, immutable: false };
 }
 
 function resolveEvidencePath(relativePath, label, evidenceRoot = path.join(root, "verification")) {
@@ -40,10 +74,9 @@ export async function verifyRemoteSourceFreshness(manifest, options = {}) {
   const fetched = new Map();
   for (const [verificationId, record] of Object.entries(manifest.adapters ?? {})) {
     for (const [index, source] of (record.sources ?? []).entries()) {
-      const sourceUrl = source.freshness?.sourceUrl ?? source.canonicalUrl;
-      if (!/^https:\/\//.test(sourceUrl ?? "")) {
-        throw new Error(`Source ${verificationId}:${index} has no remote HTTPS source URL.`);
-      }
+      const label = `Source ${verificationId}:${index}`;
+      const contract = sourceRemoteContract(source, label);
+      const sourceUrl = contract.url;
       let body = fetched.get(sourceUrl);
       if (!body) {
         const response = await fetchImpl(sourceUrl, { redirect: "follow" });
@@ -53,8 +86,10 @@ export async function verifyRemoteSourceFreshness(manifest, options = {}) {
         body = Buffer.from(await response.arrayBuffer());
         fetched.set(sourceUrl, body);
       }
-      if (sha256(body) !== source.freshness?.upstreamSha256) {
-        throw new Error(`Remote source content changed for ${verificationId}:${index}.`);
+      if (sha256(body) !== contract.expectedSha256) {
+        throw new Error(contract.immutable
+          ? `Immutable repository source changed for ${verificationId}:${index}.`
+          : `Remote source content changed for ${verificationId}:${index}.`);
       }
       // The exact quote must appear in the live upstream document, not only in
       // the locally stored capture. This ties every claim to what the vendor
@@ -87,7 +122,8 @@ export function verifyAdapterEvidence(adapter, options = {}) {
   }
 
   for (const [index, source] of (record.sources ?? []).entries()) {
-    if (!/^https:\/\//.test(source.canonicalUrl ?? "")) throw new Error(`Source ${index} has no canonical HTTPS URL.`);
+    const label = `Source ${index}`;
+    const contract = sourceRemoteContract(source, label);
     if (source.authority !== REQUIRED_SOURCE_AUTHORITY) throw new Error(`Source ${index} is not marked first-party.`);
     if (source.sourceClassification !== REQUIRED_SOURCE_CLASSIFICATION) {
       throw new Error(`Source ${index} is not classified as official product documentation.`);
@@ -105,19 +141,23 @@ export function verifyAdapterEvidence(adapter, options = {}) {
     }
     const retrieved = Date.parse(`${source.retrievedAt}T00:00:00.000Z`);
     if (!Number.isFinite(retrieved)) throw new Error(`Source ${index} has an invalid retrieval date.`);
-    const checkedAt = Date.parse(source.freshness?.checkedAt ?? "");
-    const checkIntervalDays = source.freshness?.checkIntervalDays;
-    if (source.freshness?.mode !== "remote" || !Number.isFinite(checkedAt)) {
-      throw new Error(`Source ${index} has no valid remote freshness check.`);
+    if (contract.immutable) {
+      if (contract.expectedSha256 !== source.captureSha256) {
+        throw new Error(`Source ${index} immutable source hash does not match its capture.`);
+      }
+    } else {
+      const checkedAt = Date.parse(source.freshness?.checkedAt ?? "");
+      const checkIntervalDays = source.freshness?.checkIntervalDays;
+      if (!Number.isFinite(checkedAt)) throw new Error(`Source ${index} has no valid remote freshness check.`);
+      if (!Number.isInteger(checkIntervalDays) || checkIntervalDays < 1 || checkIntervalDays > 365) {
+        throw new Error(`Source ${index} has an invalid freshness interval.`);
+      }
+      if (!/^[a-f0-9]{64}$/.test(source.freshness?.upstreamSha256 ?? "")) {
+        throw new Error(`Source ${index} has no valid upstream SHA-256.`);
+      }
+      const ageDays = (now.getTime() - checkedAt) / 86_400_000;
+      if (ageDays < 0 || ageDays > checkIntervalDays) throw new Error(`Source ${index} is stale for ${adapter.kind}.`);
     }
-    if (!Number.isInteger(checkIntervalDays) || checkIntervalDays < 1 || checkIntervalDays > 365) {
-      throw new Error(`Source ${index} has an invalid freshness interval.`);
-    }
-    if (!/^[a-f0-9]{64}$/.test(source.freshness?.upstreamSha256 ?? "")) {
-      throw new Error(`Source ${index} has no valid upstream SHA-256.`);
-    }
-    const ageDays = (now.getTime() - checkedAt) / 86_400_000;
-    if (ageDays < 0 || ageDays > checkIntervalDays) throw new Error(`Source ${index} is stale for ${adapter.kind}.`);
   }
 
   for (const check of options.requiredChecks ?? []) {

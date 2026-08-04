@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { execFileSync, spawnSync } from "node:child_process";
-import { createPaneStateEntry, loadState, saveState } from "../src/lib.mjs";
+import { createPaneStateEntry, loadState, requestDeletionConfirmation, saveState } from "../src/lib.mjs";
 
 const ACTION = path.resolve("src/action.mjs");
 const PANE_ID = "w0:p5";
@@ -33,6 +33,7 @@ async function fixture(options = {}) {
   const configDir = path.join(dir, "config");
   const fakeVercel = path.join(dir, "vercel");
   const fakeHerdr = path.join(dir, "herdr");
+  const decisionHelper = path.join(dir, "confirm.mjs");
   const vercelLog = path.join(dir, "vercel.log");
   const herdrLog = path.join(dir, "herdr.log");
   await mkdir(repo, { recursive: true });
@@ -53,9 +54,32 @@ fi
 exit 0
 `);
   await chmod(fakeVercel, 0o755);
+  await writeFile(decisionHelper, `
+import { readFileSync, renameSync, writeFileSync } from "node:fs";
+const [statePath, requestId, decision] = process.argv.slice(2);
+const state = JSON.parse(readFileSync(statePath, "utf8"));
+const match = Object.values(state.panes ?? {}).find((entry) => entry.pendingDeletion?.requestId === requestId);
+if (!match) throw new Error("pending deletion request not found");
+match.pendingDeletion.status = decision;
+match.pendingDeletion.decidedAt = new Date().toISOString();
+const temporary = \`${"${statePath}"}.${"${process.pid}"}.tmp\`;
+writeFileSync(temporary, JSON.stringify(state, null, 2) + "\\n");
+renameSync(temporary, statePath);
+`);
   await writeFile(fakeHerdr, `#!/bin/sh
 printf '%s\\n' "$*" >> "$HERDR_FAKE_HERDR_LOG"
 if [ "$1 $2" = "pane run" ] && [ "$HERDR_FAKE_PANE_RUN_FAILURE" = "1" ]; then exit 7; fi
+if [ "$1 $2 $3" = "plugin pane open" ]; then
+  printf 'popup-launch-output\n'
+  if [ "$HERDR_FAKE_POPUP_FAILURE" = "1" ]; then exit 9; fi
+  request_id=""
+  for argument in "$@"; do
+    case "$argument" in
+      HERDR_DELETION_REQUEST_ID=*) request_id="\${argument#HERDR_DELETION_REQUEST_ID=}" ;;
+    esac
+  done
+  "$HERDR_FAKE_NODE" "$HERDR_FAKE_DECISION_HELPER" "$HERDR_PLUGIN_STATE_DIR/agents.json" "$request_id" "$HERDR_FAKE_CONFIRMATION"
+fi
 exit 0
 `);
   await chmod(fakeHerdr, 0o755);
@@ -96,6 +120,10 @@ exit 0
     HERDR_FAKE_HERDR_LOG: herdrLog,
     HERDR_FAKE_REMOVE_FAILURE: options.removeFailure ? "1" : "0",
     HERDR_FAKE_PANE_RUN_FAILURE: options.paneRunFailure ? "1" : "0",
+    HERDR_FAKE_POPUP_FAILURE: options.popupFailure ? "1" : "0",
+    HERDR_FAKE_NODE: process.execPath,
+    HERDR_FAKE_DECISION_HELPER: decisionHelper,
+    HERDR_FAKE_CONFIRMATION: options.confirmation ?? "approved",
   };
   return { dir, repo, stateDir, configDir, vercelLog, herdrLog, entry, env };
 }
@@ -112,19 +140,13 @@ function parseResultLine(stdout) {
 test("replacement requires confirmation, deletes with the saved target, and records a provisional successor", async () => {
   const f = await fixture();
   try {
-    const first = invoke(f.env);
-    assert.equal(first.status, 0, first.stderr);
-    assert.match(first.stdout, /No Sandbox was changed/);
-    const armed = parseResultLine(first.stdout);
-    assert.equal(armed.schemaVersion, 1);
-    assert.equal(armed.phase, "armed");
-    assert.deepEqual(armed.sandboxNames, [f.entry.sandboxName]);
-    assert.ok(Date.parse(armed.confirmDeadline) > Date.now());
-    await assert.rejects(readFile(f.vercelLog, "utf8"));
-
-    const second = invoke(f.env);
-    assert.equal(second.status, 0, second.stderr);
-    const deleted = parseResultLine(second.stdout);
+    const result = invoke(f.env);
+    assert.equal(result.status, 0, result.stderr);
+    const marks = markerLines(result.stdout);
+    assert.equal(marks.count, 1);
+    assert.equal(marks.firstIndex, 0);
+    const deleted = parseResultLine(result.stdout);
+    assert.equal(deleted.schemaVersion, 1);
     assert.equal(deleted.phase, "deleted");
     assert.deepEqual(deleted.deletedSandboxNames, [f.entry.sandboxName]);
     assert.notEqual(deleted.sandboxName, f.entry.sandboxName);
@@ -142,31 +164,91 @@ test("replacement requires confirmation, deletes with the saved target, and reco
     assert.deepEqual(replacement.agentProfile, PROFILE);
 
     const herdrCalls = await readFile(f.herdrLog, "utf8");
+    assert.match(herdrCalls, /plugin pane open --plugin vercel\.sandbox --entrypoint deletion-confirmation --env HERDR_DELETION_REQUEST_ID=/);
     assert.match(herdrCalls, /pane run w0:p5 .*bridge\.mjs' 'start' /);
   } finally {
     await rm(f.dir, { recursive: true, force: true });
   }
 });
 
-test("orchestrated deletion is blocked by default and allowed only with the explicit opt-in", async () => {
+test("orchestrated deletion uses the same human popup confirmation", async () => {
   const f = await fixture({ invocationSource: "cli" });
   try {
-    const blocked = invoke(f.env);
-    assert.notEqual(blocked.status, 0, "cli-invoked deletion must fail without the opt-in");
-    assert.match(blocked.stderr, /allowOrchestratedDeletion/);
-    const result = parseResultLine(blocked.stdout);
-    assert.equal(result.ok, false);
-    assert.equal(result.errorKind, "permission");
-    await assert.rejects(readFile(f.vercelLog, "utf8"), undefined, "no Vercel command may run");
+    const result = invoke(f.env);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(parseResultLine(result.stdout).phase, "deleted");
+    const herdrCalls = await readFile(f.herdrLog, "utf8");
+    assert.match(herdrCalls, /plugin pane open .*deletion-confirmation/);
+  } finally {
+    await rm(f.dir, { recursive: true, force: true });
+  }
+});
 
-    await writeFile(path.join(f.configDir, "config.json"), JSON.stringify({
-      vercelBin: path.join(f.dir, "vercel"),
-      customAgents: { "fixture-agent": PROFILE },
-      allowOrchestratedDeletion: true,
-    }));
-    const armed = invoke(f.env);
-    assert.equal(armed.status, 0, armed.stderr);
-    assert.equal(parseResultLine(armed.stdout).phase, "armed");
+test("cancelling the human popup leaves the Sandbox and mapping untouched", async () => {
+  const f = await fixture({ invocationSource: "cli", confirmation: "cancelled" });
+  try {
+    const result = invoke(f.env);
+    assert.equal(result.status, 0, result.stderr);
+    const marks = markerLines(result.stdout);
+    assert.equal(marks.count, 1);
+    assert.equal(marks.firstIndex, 0);
+    const cancelled = parseResultLine(result.stdout);
+    assert.equal(cancelled.phase, "cancelled");
+    assert.equal(cancelled.reason, "declined");
+    assert.deepEqual(cancelled.sandboxNames, [f.entry.sandboxName]);
+    await assert.rejects(readFile(f.vercelLog, "utf8"), undefined, "no Vercel command may run");
+    const state = await loadState(f.stateDir);
+    assert.equal(state.panes[PANE_ID].sandboxName, f.entry.sandboxName);
+    assert.equal(state.panes[PANE_ID].pendingDeletion.status, "cancelled");
+  } finally {
+    await rm(f.dir, { recursive: true, force: true });
+  }
+});
+
+test("popup launch failure fails closed and removes its request", async () => {
+  const f = await fixture({ popupFailure: true });
+  try {
+    const result = invoke(f.env);
+    assert.notEqual(result.status, 0);
+    assert.equal(markerLines(result.stdout).firstIndex, 0);
+    assert.match(result.stdout, /popup-launch-output/);
+    await assert.rejects(readFile(f.vercelLog, "utf8"), undefined, "no Vercel command may run");
+    const state = await loadState(f.stateDir);
+    assert.equal(state.panes[PANE_ID].pendingDeletion, undefined);
+  } finally {
+    await rm(f.dir, { recursive: true, force: true });
+  }
+});
+
+test("a second invocation cannot overwrite an active confirmation", async () => {
+  const f = await fixture();
+  try {
+    const state = await loadState(f.stateDir);
+    requestDeletionConfirmation(state.panes[PANE_ID], "replace-sandbox", Date.now(), "existing-request");
+    await saveState(f.stateDir, state);
+    const result = invoke(f.env);
+    assert.notEqual(result.status, 0);
+    assert.equal(parseResultLine(result.stdout).errorKind, "conflict");
+    await assert.rejects(readFile(f.vercelLog, "utf8"), undefined, "no Vercel command may run");
+    const after = await loadState(f.stateDir);
+    assert.equal(after.panes[PANE_ID].pendingDeletion.requestId, "existing-request");
+  } finally {
+    await rm(f.dir, { recursive: true, force: true });
+  }
+});
+
+test("forget removes the mapping only after popup approval", async () => {
+  const f = await fixture({ invocationSource: "cli" });
+  try {
+    const result = invoke({ ...f.env, HERDR_PLUGIN_ACTION_ID: "forget-mapping" });
+    assert.equal(result.status, 0, result.stderr);
+    const deleted = parseResultLine(result.stdout);
+    assert.equal(deleted.phase, "deleted");
+    assert.deepEqual(deleted.deletedSandboxNames, [f.entry.sandboxName]);
+    const state = await loadState(f.stateDir);
+    assert.equal(state.panes[PANE_ID], undefined);
+    const calls = await readFile(f.vercelLog, "utf8");
+    assert.match(calls, new RegExp(`sandbox remove --scope team_saved --project project_saved ${f.entry.sandboxName}`));
   } finally {
     await rm(f.dir, { recursive: true, force: true });
   }
@@ -235,10 +317,9 @@ test("child output never precedes the marker on a success path", async () => {
 test("replacement leaves the original mapping recoverable when remote deletion fails", async () => {
   const f = await fixture({ removeFailure: true });
   try {
-    assert.equal(invoke(f.env).status, 0);
-    const second = invoke(f.env);
-    assert.notEqual(second.status, 0);
-    assert.match(second.stderr, /Could not permanently delete/);
+    const result = invoke(f.env);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Could not permanently delete/);
 
     const state = await loadState(f.stateDir);
     const current = state.panes[PANE_ID];
@@ -253,10 +334,9 @@ test("replacement leaves the original mapping recoverable when remote deletion f
 test("replacement preserves a provisional successor when Herdr cannot launch setup", async () => {
   const f = await fixture({ paneRunFailure: true });
   try {
-    assert.equal(invoke(f.env).status, 0);
-    const second = invoke(f.env);
-    assert.notEqual(second.status, 0);
-    assert.match(second.stderr, /exited with status 7/);
+    const result = invoke(f.env);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /exited with status 7/);
 
     const state = await loadState(f.stateDir);
     const replacement = state.panes[PANE_ID];

@@ -22,7 +22,7 @@ Herdr plugin v1 requires actions to be declared in `herdr-plugin.toml`; runtime 
 10. The adapter launches through `vercel sandbox exec --interactive`.
 11. Apply is incremental. Each export snapshots the Sandbox tree as a tagged commit and diffs it against the last snapshot this worktree actually received (recorded in local pane state, which re-syncs the remote baseline at the start of every apply). The patch applies only after `git apply --check` succeeds; a patch that is already present locally is detected with a reverse check and advances the marker without touching files.
 12. Stop ends compute while preserving the mapped Sandbox filesystem. The bridge reads the CLI's captured output because `vercel sandbox stop` can exit 0 on failure (measured on CLI 56.2.0); a failed stop is classified and reported, never recorded as stopped. Reconnect addresses the existing name with `sandbox exec`, which resumes the persistent Sandbox. A mapped not-found result is a recovery state, never implicit replacement.
-13. Replace and delete-and-forget require the same action twice within 60 seconds. After confirmation, the bridge permanently removes tracked Sandboxes sequentially and checkpoints each result before replacing or forgetting local state.
+13. Replace and delete-and-forget open a session-modal popup and require the user to type `DELETE` within 60 seconds. After confirmation, the bridge permanently removes tracked Sandboxes sequentially and checkpoints each result before replacing or forgetting local state.
 
 ## adapter registration
 
@@ -73,7 +73,7 @@ Version 1 entries migrate from `agent` to `agentKind` when loaded. State writes 
 - The local worktree is never mounted into the remote process.
 - Agent credentials are created inside the Sandbox and are never copied from the host.
 - Vercel account and project onboarding runs locally through the official Vercel CLI. Missing prerequisites cannot create a Sandbox or pane mapping.
-- Permanent Sandbox deletion is absent from the default stop/reconnect lifecycle. Destructive Replace and Delete-and-forget actions require a second matching invocation within 60 seconds.
+- Permanent Sandbox deletion is absent from the default stop/reconnect lifecycle. Destructive Replace and Delete-and-forget actions require typing `DELETE` in a session-modal human confirmation popup within 60 seconds.
 - The mapping is retained until every tracked Sandbox is deleted. Successful deletions are checkpointed so a partial failure cannot strand an untracked billable Sandbox.
 - Applying changes remains explicit and conflict-checked.
 

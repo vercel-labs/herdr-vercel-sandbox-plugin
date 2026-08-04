@@ -8,6 +8,7 @@ import { spawnSync } from "node:child_process";
 export const REMOTE_ROOT = "/vercel/sandbox/workspace";
 export const STATE_VERSION = 3;
 export const DELETION_CONFIRMATION_TTL_MS = 60_000;
+export const DELETION_CONFIRMATION_COLLISION_GRACE_MS = 5_000;
 export const UPLOAD_APPROVAL_TTL_MS = 10 * 60_000;
 export const TERMINAL_RESTORE_SEQUENCE = [
   "\u001b[?1000l", // normal mouse tracking
@@ -95,27 +96,82 @@ export function sandboxNamesForDeletion(entry) {
     .filter((name) => !deleted.has(name));
 }
 
-export function armOrConfirmDeletion(entry, actionId, now = Date.now()) {
-  const sandboxNames = sandboxNamesForDeletion(entry);
-  const pending = entry.pendingDeletion;
-  const requestedAt = pending ? Date.parse(pending.requestedAt) : Number.NaN;
-  const sameRequest = pending?.actionId === actionId
-    && JSON.stringify(pending.sandboxNames) === JSON.stringify(sandboxNames);
-  const unexpired = Number.isFinite(requestedAt)
-    && now >= requestedAt
-    && now - requestedAt <= DELETION_CONFIRMATION_TTL_MS;
-
-  if (sameRequest && unexpired) {
-    delete entry.pendingDeletion;
-    return { confirmed: true, sandboxNames };
+export function requestDeletionConfirmation(
+  entry,
+  actionId,
+  now = Date.now(),
+  requestId = randomBytes(16).toString("hex"),
+) {
+  const existing = entry.pendingDeletion;
+  if (existing) {
+    const state = deletionConfirmationState(entry, existing.requestId, now);
+    const decidedAt = Date.parse(state.decidedAt);
+    const approvalIsActive = state.status === "approved"
+      && Number.isFinite(decidedAt)
+      && now <= decidedAt + DELETION_CONFIRMATION_COLLISION_GRACE_MS;
+    if (state.status === "pending" || approvalIsActive) {
+      const error = new Error("A deletion confirmation is already active for this pane.");
+      error.errorKind = "conflict";
+      throw error;
+    }
   }
-
+  const sandboxNames = sandboxNamesForDeletion(entry);
   entry.pendingDeletion = {
+    requestId,
     actionId,
     sandboxNames,
+    status: "pending",
     requestedAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + DELETION_CONFIRMATION_TTL_MS).toISOString(),
   };
-  return { confirmed: false, sandboxNames };
+  return structuredClone(entry.pendingDeletion);
+}
+
+export function deletionConfirmationState(entry, requestId, now = Date.now()) {
+  const pending = entry.pendingDeletion;
+  if (!pending || pending.requestId !== requestId) return { status: "missing" };
+  const requestedAt = Date.parse(pending.requestedAt);
+  const expiresAt = Date.parse(pending.expiresAt);
+  if (!Number.isFinite(requestedAt) || !Number.isFinite(expiresAt) || expiresAt < requestedAt || now < requestedAt) {
+    return { ...structuredClone(pending), status: "invalid" };
+  }
+  if (["approved", "cancelled"].includes(pending.status)) {
+    const decidedAt = Date.parse(pending.decidedAt);
+    if (!Number.isFinite(decidedAt) || decidedAt < requestedAt || decidedAt > expiresAt) {
+      return { ...structuredClone(pending), status: "invalid" };
+    }
+    return structuredClone(pending);
+  }
+  if (pending.status !== "pending") return { ...structuredClone(pending), status: "invalid" };
+  return now > expiresAt
+    ? { ...structuredClone(pending), status: "expired" }
+    : structuredClone(pending);
+}
+
+export function decideDeletionConfirmation(entry, requestId, decision, now = Date.now()) {
+  if (!["approved", "cancelled"].includes(decision)) {
+    throw new Error(`Unknown deletion confirmation decision: ${decision}`);
+  }
+  const pending = deletionConfirmationState(entry, requestId, now);
+  if (pending.status !== "pending") {
+    throw new Error(`Deletion confirmation ${requestId} is ${pending.status}.`);
+  }
+  entry.pendingDeletion.status = decision;
+  entry.pendingDeletion.decidedAt = new Date(now).toISOString();
+  return structuredClone(entry.pendingDeletion);
+}
+
+export function consumeDeletionConfirmation(entry, requestId, now = Date.now()) {
+  const pending = deletionConfirmationState(entry, requestId, now);
+  if (pending.status !== "approved") {
+    throw new Error(`Deletion confirmation ${requestId} is ${pending.status}.`);
+  }
+  const currentNames = sandboxNamesForDeletion(entry);
+  if (JSON.stringify(currentNames) !== JSON.stringify(pending.sandboxNames)) {
+    throw new Error("The tracked Sandbox set changed after confirmation opened. No deletion was performed.");
+  }
+  delete entry.pendingDeletion;
+  return [...pending.sandboxNames];
 }
 
 export function isSensitivePath(relativePath) {
@@ -406,6 +462,9 @@ export async function readConfig(configDir) {
   if (config.allowOrchestratedDeletion !== undefined && typeof config.allowOrchestratedDeletion !== "boolean") {
     throw new Error("config.json allowOrchestratedDeletion must be a boolean");
   }
+  // Accepted so existing configurations continue to load. Human popup
+  // confirmation supersedes this legacy switch in 0.6.0.
+  delete config.allowOrchestratedDeletion;
   if (config.agentArgs !== undefined) {
     if (!config.agentArgs || typeof config.agentArgs !== "object" || Array.isArray(config.agentArgs)) {
       throw new Error("config.json agentArgs must be an object keyed by agent kind");
