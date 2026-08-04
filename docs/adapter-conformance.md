@@ -12,7 +12,7 @@ A built-in adapter whose documentation is verified but whose behavior receipt is
 
 ## Required documentation evidence
 
-`verification/adapters.json` owns adapter evidence. Each of the seven claims references an authoritative canonical URL, retrieval date, source-capture path and SHA-256, an exact supporting quote, and that quote's SHA-256.
+`verification/adapters.json` owns adapter evidence. Each of the seven claims references exactly one authoritative provenance form—either a mutable canonical HTTPS URL or an official repository path pinned to a full release commit—plus a retrieval date, source-capture path and SHA-256, exact supporting quote, and quote SHA-256.
 
 | Claim | Question |
 | --- | --- |
@@ -24,7 +24,7 @@ A built-in adapter whose documentation is verified but whose behavior receipt is
 | Herdr detection | Which documented Herdr detection identifier applies? |
 | Sandbox runtime | Which Sandbox execution and persistence behavior is documented? |
 
-`src/verification.mjs` verifies the exact quote against the captured source, all hashes, retrieval freshness, and the canonical URL. Changing a label in adapter source cannot promote the adapter.
+`src/verification.mjs` verifies the exact quote against the captured and remotely fetched source, all hashes, and either mutable freshness or the immutable release commit. Changing a label in adapter source cannot promote the adapter.
 
 ## Adapter contract
 

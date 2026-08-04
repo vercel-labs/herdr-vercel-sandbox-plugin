@@ -1,6 +1,6 @@
 id = "vercel.sandbox"
 name = "Vercel Sandbox"
-version = "0.5.1"
+version = "0.6.0"
 min_herdr_version = "0.7.5"
 description = "Run one coding-agent CLI per persistent Vercel Sandbox."
 platforms = ["linux", "macos"]
@@ -57,13 +57,21 @@ command = ["node", "src/action.mjs"]
 [[actions]]
 id = "replace-sandbox"
 title = "Replace this Sandbox"
-description = "After a second confirmation invocation, permanently delete the tracked Sandbox and create a fresh replacement for this pane."
+description = "Open a human confirmation popup, then permanently delete the tracked Sandbox and create a fresh replacement for this pane."
 contexts = ["pane"]
 command = ["node", "src/action.mjs"]
 
 [[actions]]
 id = "forget-mapping"
 title = "Delete Sandbox and forget mapping"
-description = "After a second confirmation invocation, permanently delete the tracked Sandbox and remove its local pane mapping."
+description = "Open a human confirmation popup, then permanently delete the tracked Sandbox and remove its local pane mapping."
 contexts = ["pane"]
 command = ["node", "src/action.mjs"]
+
+[[panes]]
+id = "deletion-confirmation"
+title = "Confirm Sandbox deletion"
+placement = "popup"
+width = "72%"
+height = "55%"
+command = ["node", "src/deletion-confirmation.mjs"]

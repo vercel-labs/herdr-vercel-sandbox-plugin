@@ -31,13 +31,13 @@ Never copy host credential directories into the Sandbox and never put tokens in 
 
 Reconnect recognizes only the Vercel CLI's specific not-found response as absence. It does not create a replacement automatically. Authentication, permission, team/project, network, and unknown failures are reported and leave the mapping unchanged.
 
-If the Sandbox is confirmed missing, inspect the mapping and choose recovery deliberately. Exit the agent so the pane is back at its local shell, then invoke **Replace this Sandbox** twice within 60 seconds. The first invocation previews the tracked names. The second treats the already-missing Sandbox as deleted and creates a new provisional mapping from the focused Git worktree.
+If the Sandbox is confirmed missing, inspect the mapping and choose recovery deliberately. Exit the agent so the pane is back at its local shell, then invoke **Replace this Sandbox**. Review the tracked names in the popup and type `DELETE` within 60 seconds. The action treats the already-missing Sandbox as deleted and creates a new provisional mapping from the focused Git worktree.
 
 ## Setup failed after the pane opened
 
 Invoke **Show Sandbox mapping** and inspect `lifecycleState` and `remoteCreated`. A `provisional` mapping means no remote Sandbox was proven. `creating`, `created`, or `prepared` with `remoteCreated: true` means the remote resource exists or may exist and the mapping is intentionally retained.
 
-Retry setup from the mapped pane. If the resource is unwanted, use **Delete Sandbox and forget mapping** twice within 60 seconds. Never remove the state file by hand when `remoteCreated` may be true, because that can orphan a billable Sandbox.
+Retry setup from the mapped pane. If the resource is unwanted, use **Delete Sandbox and forget mapping**, review the popup, and type `DELETE` within 60 seconds. Never remove the state file by hand when `remoteCreated` may be true, because that can orphan a billable Sandbox.
 
 ## A file is missing from the upload manifest
 
@@ -49,7 +49,7 @@ Git-ignored files are excluded even when still tracked. High-confidence credenti
 
 ## The local repository moved
 
-Open or `cd` a Herdr pane into the worktree at its new location, then invoke **Replace this Sandbox** twice within 60 seconds. The confirmed action permanently deletes the old tracked Sandbox before the new mapping records the new absolute root.
+Open or `cd` a Herdr pane into the worktree at its new location, then invoke **Replace this Sandbox** and confirm the exact tracked names in the popup. The confirmed action permanently deletes the old tracked Sandbox before the new mapping records the new absolute root.
 
 ## Applying changes reports a conflict
 
@@ -67,7 +67,7 @@ Stop reads the CLI's real output instead of trusting its exit code (`vercel sand
 - A full Herdr server restart restores layout and working directories, but not the terminal process itself.
 - Focus the mapped pane and invoke **Reconnect agent to this Sandbox**. Reconnect uses `sandbox exec` against the existing named Sandbox; it does not create a replacement.
 
-If a stale mapping should no longer be associated with the pane, exit the agent and invoke **Delete Sandbox and forget mapping** twice within 60 seconds. The plugin permanently deletes all remotely tracked names before removing local state, preventing an unreachable billable Sandbox from being left behind.
+If a stale mapping should no longer be associated with the pane, exit the agent and invoke **Delete Sandbox and forget mapping**, then confirm the exact tracked names in the popup. The plugin permanently deletes all remotely tracked names before removing local state, preventing an unreachable billable Sandbox from being left behind.
 
 ## A confirmed deletion partially fails
 
@@ -75,7 +75,7 @@ Deletion is sequential. After every successful remote deletion, the plugin immed
 
 ## A legacy mapping has no saved team/project target
 
-Mappings created before version 0.3.0 did not record their Vercel team and project, so the plugin cannot safely delete their remote Sandboxes. **Delete Sandbox and forget mapping** still works after the same two-step confirmation: it forgets the local mapping and prints the Sandbox names it could not delete remotely. If those Sandboxes still exist, remove them with `vercel sandbox remove <name>` in the owning team and project.
+Mappings created before version 0.3.0 did not record their Vercel team and project, so the plugin cannot safely delete their remote Sandboxes. **Delete Sandbox and forget mapping** still works after popup confirmation: it forgets the local mapping and prints the Sandbox names it could not delete remotely. If those Sandboxes still exist, remove them with `vercel sandbox remove <name>` in the owning team and project.
 
 ## Inspect the mapping before acting
 

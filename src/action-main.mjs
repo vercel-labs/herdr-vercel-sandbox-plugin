@@ -5,11 +5,11 @@ import { fileURLToPath } from "node:url";
 import { resolveAgentAdapter, resolveAgentKind } from "./agents.mjs";
 import { bufferOutput, emitResult, errorKindOf, resultAlreadyEmitted } from "./result.mjs";
 import {
-  DELETION_CONFIRMATION_TTL_MS,
+  consumeDeletionConfirmation,
   contextPane,
   contextWorkspace,
   createPaneStateEntry,
-  armOrConfirmDeletion,
+  deletionConfirmationState,
   buildUploadManifest,
   formatUploadManifest,
   forgetPaneState,
@@ -20,6 +20,7 @@ import {
   loadState,
   parseContext,
   readConfig,
+  requestDeletionConfirmation,
   resolveProjectConfig,
   run,
   sandboxArgs,
@@ -36,6 +37,7 @@ const pluginRoot = process.env.HERDR_PLUGIN_ROOT ?? path.resolve(path.dirname(fi
 const stateDir = process.env.HERDR_PLUGIN_STATE_DIR;
 const configDir = process.env.HERDR_PLUGIN_CONFIG_DIR;
 const herdr = process.env.HERDR_BIN_PATH ?? "herdr";
+const pluginId = process.env.HERDR_PLUGIN_ID ?? "vercel.sandbox";
 const context = parseContext();
 
 if (!actionId || !stateDir || !configDir) {
@@ -73,6 +75,59 @@ function notify(title, body) {
   ], { allowFailure: true, capture: true });
   if (result.status !== 0) {
     console.warn(`Herdr could not show the notification: ${result.stderr.trim() || `exit ${result.status}`}`);
+  }
+}
+
+function delay(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function waitForDeletionConfirmation(paneId, action) {
+  let { entry } = await stateForPane(stateDir, paneId);
+  const request = requestDeletionConfirmation(entry, action);
+  const deadline = Date.parse(request.expiresAt);
+  await savePaneEntry(stateDir, paneId, entry);
+
+  try {
+    herdrRun([
+      "plugin", "pane", "open",
+      "--plugin", pluginId,
+      "--entrypoint", "deletion-confirmation",
+      "--env", `HERDR_DELETION_REQUEST_ID=${request.requestId}`,
+      "--focus",
+    ]);
+  } catch (error) {
+    ({ entry } = await stateForPane(stateDir, paneId));
+    if (entry.pendingDeletion?.requestId === request.requestId) {
+      delete entry.pendingDeletion;
+      await savePaneEntry(stateDir, paneId, entry);
+    }
+    throw error;
+  }
+
+  while (true) {
+    ({ entry } = await stateForPane(stateDir, paneId));
+    const now = Date.now();
+    const confirmation = deletionConfirmationState(entry, request.requestId, now);
+    if (confirmation.status === "approved") {
+      const sandboxNames = consumeDeletionConfirmation(entry, request.requestId, now);
+      await savePaneEntry(stateDir, paneId, entry);
+      return { approved: true, sandboxNames };
+    }
+    if (["cancelled", "expired", "missing", "invalid"].includes(confirmation.status) || now > deadline) {
+      const reasons = {
+        cancelled: "declined",
+        expired: "expired",
+        missing: "superseded",
+        invalid: "invalid",
+      };
+      return {
+        approved: false,
+        sandboxNames: request.sandboxNames,
+        reason: reasons[confirmation.status] ?? "expired",
+      };
+    }
+    await delay(100);
   }
 }
 
@@ -126,35 +181,6 @@ function openOnboardingPane(mode, sourcePane, cwd) {
       ? "Complete the official Vercel CLI login flow in the new pane, then retry Start. No Sandbox was created."
       : "Choose or create a Vercel project in the new pane, then retry Start. No Sandbox was created.",
   );
-}
-
-// Default-deny friction for permanent deletion, NOT an authorization boundary.
-//
-// This blocks the sanctioned non-keybinding invocation paths by default: an
-// orchestrator using `herdr plugin action invoke` arrives as "cli", and an
-// honest socket caller as "api", so neither can delete unless the user sets
-// allowOrchestratedDeletion. That prevents accidental destruction by a
-// well-behaved orchestrator.
-//
-// It is NOT a defense against an adversarial local agent. invocation_source is
-// caller-overridable through Herdr's raw plugin.action.invoke context merge
-// (Herdr 0.7.5 src/app/api/plugins/context.rs: provided value wins), so a local
-// process can forge "keybinding". A local agent with shell access can also
-// launch this action with forged environment variables or rewrite config.json
-// to set the flag itself. No plugin-side check can stop a local process that
-// can do those things; a real boundary must be user-held and enforced by Herdr
-// outside agent-controlled socket and input paths. See docs.
-function assertDeletionAllowed(config) {
-  const source = context.invocation_source;
-  if (source === "keybinding") return;
-  if (config.allowOrchestratedDeletion === true) return;
-  const error = new Error(
-    `Permanent Sandbox deletion was invoked from "${source ?? "unknown"}", not a keybinding. `
-    + "Set allowOrchestratedDeletion to true in config.json to let orchestrating agents delete Sandboxes. "
-    + "This is friction against accidental deletion, not a security boundary.",
-  );
-  error.errorKind = "permission";
-  throw error;
 }
 
 async function connectVercel() {
@@ -299,25 +325,19 @@ async function replaceSandbox() {
     throw new Error(`Exit ${context.focused_pane_agent} in pane ${paneId} before replacing its Sandbox.`);
   }
   const config = await readConfig(configDir);
-  assertDeletionAllowed(config);
 
   let { state, entry } = await stateForPane(stateDir, paneId);
-  const confirmation = armOrConfirmDeletion(entry, "replace-sandbox");
-  await savePaneEntry(stateDir, paneId, entry);
-  if (!confirmation.confirmed) {
-    const names = confirmation.sandboxNames.join(", ");
+  const confirmation = await waitForDeletionConfirmation(paneId, "replace-sandbox");
+  if (!confirmation.approved) {
     emitResult({
       action: "replace-sandbox",
       ok: true,
-      phase: "armed",
+      phase: "cancelled",
       sandboxNames: confirmation.sandboxNames,
-      confirmDeadline: new Date(Date.now() + DELETION_CONFIRMATION_TTL_MS).toISOString(),
+      reason: confirmation.reason,
+      paneId,
     });
-    notify(
-      "Confirm permanent Sandbox replacement",
-      `Invoke Replace this Sandbox again within 60 seconds to permanently delete: ${names}`,
-    );
-    console.log(`No Sandbox was changed. Invoke Replace this Sandbox again within 60 seconds to permanently delete ${names} and create its replacement.`);
+    console.log("No Sandbox was changed because human confirmation was not completed.");
     return;
   }
 
@@ -371,30 +391,23 @@ async function forgetMapping() {
   if (context.focused_pane_agent) {
     throw new Error(`Exit ${context.focused_pane_agent} in pane ${paneId} before forgetting its mapping.`);
   }
-  const config = await readConfig(configDir);
-  assertDeletionAllowed(config);
   let { entry } = await stateForPane(stateDir, paneId);
   // Pre-0.3.0 mappings have no saved team/project target, so their remote
   // Sandboxes cannot be safely deleted through the CLI. Forgetting must still
   // be possible; otherwise the mapping is stuck forever.
   const hasTarget = Boolean(entry.vercelScope && entry.vercelProject);
-  const confirmation = armOrConfirmDeletion(entry, "forget-mapping");
-  await savePaneEntry(stateDir, paneId, entry);
-  if (!confirmation.confirmed) {
-    const names = confirmation.sandboxNames.join(", ");
-    const warning = hasTarget
-      ? `permanently delete: ${names}`
-      : `forget ${names} WITHOUT remote deletion (this legacy mapping has no saved Vercel team/project target)`;
+  const confirmation = await waitForDeletionConfirmation(paneId, "forget-mapping");
+  if (!confirmation.approved) {
     emitResult({
       action: "forget-mapping",
       ok: true,
-      phase: "armed",
+      phase: "cancelled",
       sandboxNames: confirmation.sandboxNames,
       remoteDeletionPossible: hasTarget,
-      confirmDeadline: new Date(Date.now() + DELETION_CONFIRMATION_TTL_MS).toISOString(),
+      reason: confirmation.reason,
+      paneId,
     });
-    notify("Confirm permanent Sandbox deletion", `Invoke Delete Sandbox and forget mapping again within 60 seconds to ${warning}`);
-    console.log(`No Sandbox was changed. Invoke Delete Sandbox and forget mapping again within 60 seconds to ${warning}.`);
+    console.log("No Sandbox was changed because human confirmation was not completed.");
     return;
   }
 

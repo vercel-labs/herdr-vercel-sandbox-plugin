@@ -85,7 +85,7 @@ async function fixture() {
   return {
     evidenceRoot,
     adapter: { kind: "fixture-agent", pinnedVersion: "1.0.0", verificationId: "fixture-agent-1.0.0" },
-    manifest: { schemaVersion: 3, adapters: { "fixture-agent-1.0.0": record } },
+    manifest: { schemaVersion: 4, adapters: { "fixture-agent-1.0.0": record } },
     record,
     receiptArtifact,
   };
@@ -162,7 +162,7 @@ test("changed hashes, stale sources, and mismatched versions fail closed", async
   });
 });
 
-test("source authority, verification method, upstream hashes, and manifest schema fail closed", async () => {
+test("source provenance, authority, verification method, upstream hashes, and manifest schema fail closed", async () => {
   await withFixture(async ({ adapter, manifest, evidenceRoot, record }) => {
     record.sources[0].authority = "self-asserted";
     assert.throws(() => verifyAdapterEvidence(adapter, { manifest, evidenceRoot, requiredChecks: checks }), /not marked first-party/);
@@ -176,8 +176,47 @@ test("source authority, verification method, upstream hashes, and manifest schem
     assert.throws(() => verifyAdapterEvidence(adapter, { manifest, evidenceRoot, requiredChecks: checks }), /no valid upstream SHA-256/);
   });
   await withFixture(async ({ adapter, manifest, evidenceRoot }) => {
-    manifest.schemaVersion = 2;
-    assert.throws(() => verifyAdapterEvidence(adapter, { manifest, evidenceRoot, requiredChecks: checks }), /manifest schema must be 3/);
+    manifest.schemaVersion = 3;
+    assert.throws(() => verifyAdapterEvidence(adapter, { manifest, evidenceRoot, requiredChecks: checks }), /manifest schema must be 4/);
+  });
+  await withFixture(async ({ adapter, manifest, evidenceRoot, record }) => {
+    record.sources[0].repositorySource = {
+      repository: "https://github.com/example/fixture",
+      commit: "a".repeat(40),
+      path: "docs/fixture.md",
+    };
+    assert.throws(() => verifyAdapterEvidence(adapter, { manifest, evidenceRoot, requiredChecks: checks }), /exactly one/);
+  });
+});
+
+test("immutable release documentation is hash-verified without becoming stale", async () => {
+  await withFixture(async ({ adapter, manifest, evidenceRoot, record }) => {
+    const source = record.sources[0];
+    delete source.canonicalUrl;
+    source.repositorySource = {
+      repository: "https://github.com/example/fixture",
+      commit: "a".repeat(40),
+      path: "docs/fixture.md",
+    };
+    source.freshness = { mode: "immutable-snapshot" };
+    assert.equal(verifyAdapterEvidence(adapter, {
+      manifest,
+      evidenceRoot,
+      requiredChecks: checks,
+      now: new Date("2036-08-01T13:00:00.000Z"),
+    }).supportLevel, "built-in-lifecycle-verified");
+
+    const expected = Buffer.from("Official documentation\nfixture install command\n");
+    const passing = await verifyRemoteSourceFreshness(manifest, {
+      fetchImpl: async (url) => {
+        assert.equal(url, `https://raw.githubusercontent.com/example/fixture/${"a".repeat(40)}/docs/fixture.md`);
+        return { ok: true, status: 200, arrayBuffer: async () => expected };
+      },
+    });
+    assert.equal(passing.checkedSources, 1);
+    await assert.rejects(() => verifyRemoteSourceFreshness(manifest, {
+      fetchImpl: async () => ({ ok: true, status: 200, arrayBuffer: async () => Buffer.from("tampered") }),
+    }), /Immutable repository source changed/);
   });
 });
 

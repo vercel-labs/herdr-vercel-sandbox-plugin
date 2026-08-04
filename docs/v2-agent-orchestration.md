@@ -1,9 +1,10 @@
 # v2 spec: agent-readable output and local-agent orchestration
 
-Status: shipped in plugin `0.5.1` (2026-08-02), except the maintainer-side
-items listed under dependencies. The README section "driving the plugin from
-a local agent" is the user-facing contract; this document records the design
-and its evidence.
+Status: v2.1 and v2.3 shipped in plugin `0.5.1` (2026-08-02). The v2.2 human
+confirmation revision is implemented for plugin `0.6.0` (2026-08-04), except
+the maintainer-side items listed under dependencies. The README section
+"driving the plugin from a local agent" is the user-facing contract; this
+document records the design and its evidence.
 
 ## Motivation
 
@@ -85,8 +86,8 @@ Per-action payloads (draft):
 | apply-changes (failure) | `ok:false`, `result:"conflict"\|"error"`, `errorKind`, `localRoot` |
 | stop | `sandboxName`, `lifecycleState:"stopped"` |
 | info | the bridge mapping object plus lifecycle fields (`remoteCreated`, `lifecycleState`, `prepared`, sanitized `lastError`) and the envelope fields |
-| replace-sandbox / forget-mapping (armed) | `phase:"armed"`, `sandboxNames`, `confirmDeadline`; forget also emits `remoteDeletionPossible` |
-| replace-sandbox / forget-mapping (confirmed) | `phase:"deleted"`, `deletedSandboxNames`, and for replace the new `sandboxName`. A legacy target-less forget emits `deletedSandboxNames:[]`, `remoteDeletionSkipped:true`, `unverifiedSandboxNames` |
+| replace-sandbox / forget-mapping (confirmed) | `phase:"deleted"`, `deletedSandboxNames`, `paneId`, and for replace the new `sandboxName`. A legacy target-less forget emits `deletedSandboxNames:[]`, `remoteDeletionSkipped:true`, `unverifiedSandboxNames` |
+| replace-sandbox / forget-mapping (not confirmed) | `phase:"cancelled"`, `sandboxNames`, `reason:"declined"\|"expired"\|"superseded"\|"invalid"`, `paneId`; forget also emits `remoteDeletionPossible` |
 | connect-vercel / link-vercel-project | `phase:"onboarding-opened"`, `onboarding`, `paneId` |
 
 `result:"unknown"` (success) appears when apply completed but the outcome text
@@ -123,34 +124,23 @@ A documented recipe with the signals an orchestrator should trust:
   Vercel-account-level and must be documented from measured behavior, not
   assumed.
 
-### Destructive-action friction (NOT an authorization boundary)
+### Human confirmation for destructive actions
 
-`allowOrchestratedDeletion` (default `false`) is default-deny friction against
-accidental deletion by a well-behaved orchestrator. Out of the box a sanctioned
-orchestrator (using `herdr plugin action invoke`, which arrives as `"cli"`, or
-an honest socket call, `"api"`) cannot invoke replace or forget; the user grants
-that power explicitly in config. That is its entire value.
+Replace and forget always open a session-modal Herdr popup containing the exact
+Sandbox names covered by the request. The action remains `running` while it
+waits. The user must type `DELETE` within 60 seconds. Any other input, closing
+the popup, an expired request, or a changed Sandbox set cancels or rejects the
+operation before remote deletion begins.
 
-It is NOT a security boundary against an adversarial local agent, and must not
-be described as one. Three independent bypasses, all verified against Herdr
-0.7.5:
+Herdr 0.7.5 popup terminals have no pane ID and remain outside `pane.*` and
+agent APIs. Within the supported plugin flow, keybinding, CLI, and socket
+requests all open the same human confirmation popup. This is an interaction-level
+confirmation for plugin-mediated deletion; host containment and
+credential policy remain separate deployment concerns.
 
-1. `invocation_source` is caller-overridable. Herdr's `merge_plugin_context`
-   (`src/app/api/plugins/context.rs`) lets a raw `plugin.action.invoke` caller
-   supply `invocation_source: "keybinding"`, which overrides the
-   server-authored value. Confirmed end to end: a raw socket call with a forged
-   `"keybinding"` source was accepted.
-2. A local agent can launch `src/action.mjs` directly with forged
-   `HERDR_PLUGIN_*` environment variables.
-3. A local agent can rewrite `config.json` to set the flag itself.
-
-The intended adversary (a local orchestrating agent with shell and socket
-access) can do all three. No plugin-side check can stop a process that can
-forge its own environment or edit its own config. A real authorization boundary
-must be user-held and enforced by Herdr outside agent-controlled socket and
-input paths (server-authored, non-overridable provenance, or a confirmation the
-agent cannot drive). Until Herdr provides that, treat the flag as convenience
-friction only. This is queued as a maintainer question.
+Older configurations may still contain `allowOrchestratedDeletion`. Version
+0.6.0 accepts that key for compatibility, but it no longer changes behavior:
+the popup confirmation is required for every plugin-mediated deletion.
 
 ## v2.3 Conformance addition
 
@@ -170,8 +160,7 @@ per-adapter claim rather than folklore.
 
 ## Non-goals
 
-- No change to the upload-approval, deletion-confirmation, or credential
-  boundaries. Orchestrators pass through the same gates as humans, including
-  the two-step destructive confirmations.
+- No change to the upload-approval or credential boundaries. Orchestrators can
+  request destructive actions, but the popup decision remains human-operated.
 - No automatic granting of GitHub or service credentials to orchestrated
   Sandboxes.

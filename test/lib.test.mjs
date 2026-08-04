@@ -8,10 +8,12 @@ import {
   REMOTE_ROOT,
   STATE_VERSION,
   TERMINAL_RESTORE_SEQUENCE,
-  armOrConfirmDeletion,
   buildUploadManifest,
+  consumeDeletionConfirmation,
   createPaneStateEntry,
   createWorkspaceArchive,
+  decideDeletionConfirmation,
+  deletionConfirmationState,
   forgetPaneState,
   hasProjectTarget,
   inspectVercelAuthentication,
@@ -21,6 +23,7 @@ import {
   makeSandboxName,
   readConfig,
   readLinkedProject,
+  requestDeletionConfirmation,
   resolveProjectConfig,
   restoreTerminal,
   sandboxNamesForDeletion,
@@ -111,7 +114,7 @@ test("pane mappings are agent-neutral and retain replacement history", () => {
   }), /outside its Git worktree/);
 });
 
-test("destructive actions require the same invocation twice within 60 seconds", () => {
+test("destructive actions require an exact, unexpired popup decision", () => {
   const entry = {
     sandboxName: "herdr-opencode-current",
     previousSandboxNames: ["herdr-opencode-old", "herdr-opencode-old"],
@@ -119,18 +122,81 @@ test("destructive actions require the same invocation twice within 60 seconds", 
   const now = Date.parse("2026-07-31T20:00:00.000Z");
 
   assert.deepEqual(sandboxNamesForDeletion(entry), ["herdr-opencode-old", "herdr-opencode-current"]);
-  assert.deepEqual(armOrConfirmDeletion(entry, "replace-sandbox", now), {
-    confirmed: false,
+  assert.deepEqual(requestDeletionConfirmation(entry, "replace-sandbox", now, "request-1"), {
+    requestId: "request-1",
+    actionId: "replace-sandbox",
     sandboxNames: ["herdr-opencode-old", "herdr-opencode-current"],
+    status: "pending",
+    requestedAt: "2026-07-31T20:00:00.000Z",
+    expiresAt: "2026-07-31T20:01:00.000Z",
   });
-  assert.equal(armOrConfirmDeletion(entry, "forget-mapping", now + 1_000).confirmed, false);
-  assert.equal(armOrConfirmDeletion(entry, "forget-mapping", now + 2_000).confirmed, true);
+  assert.equal(deletionConfirmationState(entry, "request-1", now + 1_000).status, "pending");
+  assert.equal(decideDeletionConfirmation(entry, "request-1", "approved", now + 2_000).status, "approved");
+  assert.deepEqual(
+    consumeDeletionConfirmation(entry, "request-1", now + 3_000),
+    ["herdr-opencode-old", "herdr-opencode-current"],
+  );
   assert.equal(entry.pendingDeletion, undefined);
 
-  assert.equal(armOrConfirmDeletion(entry, "replace-sandbox", now + 3_000).confirmed, false);
-  assert.equal(armOrConfirmDeletion(entry, "replace-sandbox", now + 64_000).confirmed, false);
+  requestDeletionConfirmation(entry, "forget-mapping", now, "request-2");
+  assert.equal(deletionConfirmationState(entry, "request-2", now + 60_001).status, "expired");
+  assert.throws(
+    () => decideDeletionConfirmation(entry, "request-2", "approved", now + 60_001),
+    /is expired/,
+  );
+
+  requestDeletionConfirmation(entry, "forget-mapping", now + 61_000, "request-boundary");
+  decideDeletionConfirmation(entry, "request-boundary", "approved", now + 120_900);
+  assert.equal(
+    deletionConfirmationState(entry, "request-boundary", now + 121_100).status,
+    "approved",
+    "a decision made before the deadline remains valid when the parent polls later",
+  );
+  assert.deepEqual(
+    consumeDeletionConfirmation(entry, "request-boundary", now + 121_100),
+    ["herdr-opencode-old", "herdr-opencode-current"],
+  );
+
+  requestDeletionConfirmation(entry, "replace-sandbox", now + 121_200, "request-approved");
+  decideDeletionConfirmation(entry, "request-approved", "approved", now + 121_300);
+  assert.throws(
+    () => requestDeletionConfirmation(entry, "forget-mapping", now + 121_301, "request-too-soon"),
+    /already active/,
+  );
+  requestDeletionConfirmation(entry, "forget-mapping", now + 126_301, "request-after-grace");
+  assert.equal(entry.pendingDeletion.requestId, "request-after-grace");
+  entry.pendingDeletion.status = "cancelled";
+  entry.pendingDeletion.decidedAt = new Date(now + 126_302).toISOString();
+
+  requestDeletionConfirmation(entry, "replace-sandbox", now + 127_000, "request-active");
+  assert.throws(
+    () => requestDeletionConfirmation(entry, "forget-mapping", now + 127_001, "request-overwrite"),
+    /already active/,
+  );
+  assert.equal(entry.pendingDeletion.requestId, "request-active");
+  entry.pendingDeletion.status = "bogus";
+  assert.equal(deletionConfirmationState(entry, "request-active", now + 127_002).status, "invalid");
+
+  requestDeletionConfirmation(entry, "replace-sandbox", now + 128_000, "request-3");
+  decideDeletionConfirmation(entry, "request-3", "approved", now + 129_000);
+  entry.previousSandboxNames.push("herdr-opencode-new");
+  assert.throws(
+    () => consumeDeletionConfirmation(entry, "request-3", now + 130_000),
+    /tracked Sandbox set changed/,
+  );
   entry.deletedSandboxNames = ["herdr-opencode-old"];
-  assert.deepEqual(sandboxNamesForDeletion(entry), ["herdr-opencode-current"]);
+  assert.deepEqual(sandboxNamesForDeletion(entry), ["herdr-opencode-new", "herdr-opencode-current"]);
+});
+
+test("legacy allowOrchestratedDeletion remains accepted but has no runtime effect", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "herdr-legacy-config-test-"));
+  try {
+    await writeFile(path.join(dir, "config.json"), JSON.stringify({ allowOrchestratedDeletion: false }));
+    const config = await readConfig(dir);
+    assert.equal(Object.hasOwn(config, "allowOrchestratedDeletion"), false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
 
 test("delete bridge permanently removes every tracked Sandbox and records progress", async () => {

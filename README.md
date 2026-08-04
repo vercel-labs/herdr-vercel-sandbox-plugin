@@ -169,6 +169,10 @@ Find the Herdr-managed config directory:
 herdr plugin config-dir vercel.sandbox
 ```
 
+Older configurations may contain `allowOrchestratedDeletion`. Version 0.6.0
+accepts the key for compatibility, but it no longer changes behavior because
+the human confirmation popup is always required for plugin-mediated deletion.
+
 Create `config.json` there. This example is complete and working as written:
 
 ```json
@@ -225,10 +229,10 @@ Custom commands execute inside the Sandbox and are always labeled unverified. Th
 - **Apply Sandbox changes locally** is repeatable and incremental. Each apply exports only the changes since the last applied snapshot, checks them with `git apply --check`, and applies them only if the check passes. After a successful apply the snapshot marker advances, so the next apply brings over only newer work. Applying the same changes twice reports "already present locally" instead of failing.
 - **Stop this Sandbox** stops compute while preserving its filesystem. The plugin reads the CLI's real output; a failed stop is reported as a failure, never as success.
 - **Show Sandbox mapping** prints the agent kind, installed version, capabilities, and pane-to-Sandbox mapping.
-- **Replace this Sandbox** is a destructive, two-step action. The first invocation lists and arms deletion of every Sandbox tracked by the mapping. Invoke it again within 60 seconds to permanently delete those Sandboxes and start a fresh replacement.
-- **Delete Sandbox and forget mapping** uses the same two-step confirmation, permanently deletes every Sandbox tracked by the mapping, and only then removes local pane state. A legacy mapping without a saved team/project target can still be forgotten after the same confirmation; the plugin then lists the names it could not delete remotely so you can remove them manually.
+- **Replace this Sandbox** opens a session-modal confirmation popup listing every Sandbox tracked by the mapping. Type `DELETE` in that popup within 60 seconds to permanently delete those Sandboxes and start a fresh replacement. Cancelling or closing the popup changes nothing.
+- **Delete Sandbox and forget mapping** uses the same human confirmation popup, permanently deletes every Sandbox tracked by the mapping, and only then removes local pane state. A legacy mapping without a saved team/project target can still be forgotten after confirmation; the plugin then lists the names it could not delete remotely so you can remove them manually.
 
-Permanent deletion is explicit and never part of stop, reconnect, or normal agent exit. A single Replace/Delete invocation changes nothing. If deletion partly fails, the plugin records each successful deletion before stopping, retains the mapping, and lets the user retry only the remaining names.
+Permanent deletion is explicit and never part of stop, reconnect, or normal agent exit. Replace and Delete-and-forget wait for a decision in a Herdr popup before continuing. If deletion partly fails, the plugin records each successful deletion before stopping, retains the mapping, and lets the user retry only the remaining names.
 
 The initial upload is a filtered snapshot, not a live filesystem mount. It excludes `.git` and host GitHub/SSH credentials. Changes made remotely remain in the Sandbox until you explicitly apply a conflict-checked Git patch locally. The default authority path is: the remote agent edits and tests; the user applies; the outside orchestrator reviews and separately decides whether to commit and push. Direct GitHub credentials are not provided by default. Enabling such access must be a separate explicit capability and means remote code can act with the granted GitHub permissions. See [troubleshooting and recovery](docs/troubleshooting.md) for authentication policy, deleted Sandboxes, incomplete setup, moved worktrees, patch conflicts, and Herdr restarts.
 
@@ -266,16 +270,13 @@ in a new pane, not that the Sandbox exists. The bridge creates the Sandbox
 asynchronously; poll `info` for `remoteCreated` and `lifecycleState` to learn
 whether creation and setup actually succeeded.
 
-Destructive actions have a default-deny guard: replace and forget refuse
-non-`"keybinding"` invocations unless `"allowOrchestratedDeletion": true` is
-set in `config.json`, so a sanctioned orchestrator cannot delete Sandboxes by
-default. This is friction against accidental deletion, NOT a security boundary:
-Herdr lets a raw socket caller forge the `invocation_source`, and a local agent
-can also launch the action with forged environment variables or edit
-`config.json` itself. Do not rely on it to contain an adversarial local agent;
-a real boundary must be enforced by Herdr outside agent-controlled paths. The
-upload-manifest approval and two-step deletion confirmation apply to agents
-exactly as to humans.
+Replace and forget always pause in a session-modal Herdr popup that lists the
+exact Sandbox names. The user must type `DELETE` within 60 seconds; any other
+input, closing the popup, or expiry cancels the action. The popup is outside
+Herdr's normal pane and agent APIs, so an orchestrator invoking the action sees
+its plugin log remain `running` until the user decides. This contract covers
+deletion performed through the plugin. Broader host policy belongs to the
+agent harness and credential environment.
 
 ## agent conformance
 
@@ -303,6 +304,6 @@ npm run verify:adapters
 npm run verify:sources:remote
 ```
 
-`npm run check` runs syntax, unit, schema, migration, dispatch, bridge lifecycle, docs-example parity, and local adapter evidence checks. `verify:sources:remote` fetches every authoritative source document, compares its bytes with the recorded SHA-256, and confirms each exact quote still appears in the live upstream content. Source captures are the raw fetched bytes of those documents, so a quote can only verify against what the vendor actually published.
+`npm run check` runs syntax, unit, schema, migration, dispatch, bridge lifecycle, docs-example parity, and local adapter evidence checks. `verify:sources:remote` re-fetches every authoritative source, checks its pinned SHA-256, and confirms each exact quote. Version-matched documentation from an official release commit is immutable and does not become stale when the vendor's current website changes; claims without a public release source retain byte-for-byte checks against the mutable vendor page.
 
 For a new adapter, run the fixture lifecycle in [agent conformance](docs/adapter-conformance.md): install, authenticate, create the expected remote file, apply it locally, stop, resume, and confirm both the file and credential persist. A behavior claim is not marked verified unless its canonical source capture, exact quotes, raw lifecycle artifacts, hashes, pinned agent version, and validated receipt are present in this repository.

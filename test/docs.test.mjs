@@ -35,7 +35,9 @@ test("every README JSON config example parses through the real config loader", a
 });
 
 test("every action ID referenced in the README is declared in herdr-plugin.toml", () => {
-  const declared = new Set([...manifestToml.matchAll(/^id = "([a-z-]+)"$/gm)].map((match) => match[1]));
+  const declared = new Set(manifestToml.split("[[actions]]").slice(1)
+    .map((section) => section.match(/^\s*id = "([a-z-]+)"/m)?.[1])
+    .filter(Boolean));
   const referenced = new Set([...readme.matchAll(/vercel\.sandbox\.([a-z-]+)/g)].map((match) => match[1]));
   assert.ok(referenced.size >= 9, "the README shows a keybinding for every action");
   for (const id of referenced) {
@@ -64,7 +66,12 @@ test("the documented result-line contract matches the implementation", async () 
     assert.ok(document.includes(RESULT_MARKER.trim()), "the marker prefix is documented verbatim");
     assert.ok(document.includes(`"schemaVersion":${RESULT_SCHEMA_VERSION}`), "the documented schema version matches the code");
   }
-  assert.ok(readme.includes("allowOrchestratedDeletion"), "the deletion opt-in is documented in the README");
+  assert.ok(readme.includes("session-modal Herdr popup"), "the human deletion confirmation is documented in the README");
+  assert.match(readme, /allowOrchestratedDeletion[\s\S]{0,200}no longer changes behavior/);
+  const popupPane = manifestToml.split("[[panes]]").slice(1)
+    .find((section) => /^\s*id = "deletion-confirmation"$/m.test(section));
+  assert.ok(popupPane, "the deletion confirmation pane is declared");
+  assert.match(popupPane, /^\s*placement = "popup"$/m);
 });
 
 test("the README custom-agent example uses only fields the profile validator accepts", () => {
