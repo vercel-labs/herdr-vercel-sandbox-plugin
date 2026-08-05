@@ -1,0 +1,7 @@
+observedAt: 2026-08-05T15:06:46.308Z
+probe: remote fixture file content
+command: cat '/vercel/sandbox/workspace/test/fixtures/basic-project/agent-conformance-output.txt'
+exitStatus: 0
+stdout: Herdr agent adapter works.
+stderr: Vercel CLI 56.2.0 (Node.js 26.4.0)
+$ sh -lc cat '/vercel/sandbox/workspace/test/fixtures/basic-project/agent-conformance-output.txt'

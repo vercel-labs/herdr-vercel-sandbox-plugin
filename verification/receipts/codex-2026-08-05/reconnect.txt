@@ -1,0 +1,3 @@
+observedAt: 2026-08-05T15:10:00.068Z
+lifecycleState: ready
+lastConnectedAt: 2026-08-05T15:09:31.198Z

@@ -1,0 +1,70 @@
+{
+  "agentVersion": "1.18.9",
+  "method": "interactive-lifecycle-v1",
+  "observedAt": "2026-08-05T15:22:42.984Z",
+  "command": [
+    "node",
+    "scripts/capture-lifecycle-run.mjs",
+    "--pane-id",
+    "w8:pA"
+  ],
+  "environment": {
+    "sandboxName": "herdr-opencode-9c3c757ce13b",
+    "agentKind": "opencode",
+    "runtime": "node24"
+  },
+  "exitStatus": 0,
+  "phases": [
+    {
+      "name": "install",
+      "exitStatus": 0,
+      "output": "receipts/opencode-2026-08-05/install.txt",
+      "outputSha256": "b7c7143c1bc5cbfcc17dcdf31a8dc61e4b802ae4d31f03526ffd5a1b40550935"
+    },
+    {
+      "name": "authenticate",
+      "exitStatus": 0,
+      "output": "receipts/opencode-2026-08-05/authenticate.txt",
+      "outputSha256": "7fac2f76442207458f89f33e60fbf8005bf7096fcea583c7f62eaa4f3d426816"
+    },
+    {
+      "name": "modify",
+      "exitStatus": 0,
+      "output": "receipts/opencode-2026-08-05/modify.txt",
+      "outputSha256": "620ffdc8b5492642667088dcfe99008f2f9e39542e1da27f39eabe4a4a0688f5"
+    },
+    {
+      "name": "export",
+      "exitStatus": 0,
+      "output": "receipts/opencode-2026-08-05/export.txt",
+      "outputSha256": "73f64f2cbbeffd5cafe93b291bf0e94b70f747757d40f7bcfb83f361f20dc2f0"
+    },
+    {
+      "name": "stop",
+      "exitStatus": 0,
+      "output": "receipts/opencode-2026-08-05/stop.txt",
+      "outputSha256": "4c31884b905ce5362d674c65a3a42245634879d29f18d008d3d4c4e7aab91b98"
+    },
+    {
+      "name": "reconnect",
+      "exitStatus": 0,
+      "output": "receipts/opencode-2026-08-05/reconnect.txt",
+      "outputSha256": "848fcc5e33b2828afc296af57819153308ce34af758ed6f584dbc6a495cfc9ec"
+    },
+    {
+      "name": "persistence",
+      "exitStatus": 0,
+      "output": "receipts/opencode-2026-08-05/persistence.txt",
+      "outputSha256": "383ad79b57208948d1676f833bfd5049904fa07c4ee2caece2926aef829d8138"
+    }
+  ],
+  "claims": [
+    "credentialPersistence",
+    "herdrDetection",
+    "interactiveLaunch",
+    "linuxInstallation",
+    "remoteAuthentication",
+    "sandboxRuntime",
+    "ttyBehavior"
+  ]
+}

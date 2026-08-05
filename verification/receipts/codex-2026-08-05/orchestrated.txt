@@ -1,0 +1,26 @@
+observedAt: 2026-08-05T15:10:19.645Z
+prompt: Reply with exactly: orchestration-check-ok
+promptExitStatus: 0
+readExitStatus: 0
+confirmed: true
+screen tail:
+╭──────────────────────────────────────────────────╮
+│ >_ OpenAI Codex (v0.146.0)                       │
+│                                                  │
+│ model:     gpt-5.6-terra   /model to change      │
+│ directory: /vercel/…/test/fixtures/basic-project │
+╰──────────────────────────────────────────────────╯
+
+  Tip: New For a limited time, Codex is included in
+  your plan for free – let’s build together.
+
+
+› Reply with exactly: orchestration-check-ok
+
+
+• orchestration-check-ok
+
+
+› Use /skills to list available skills
+
+  gpt-5.6-terra default · /vercel/sandbox/workspace…

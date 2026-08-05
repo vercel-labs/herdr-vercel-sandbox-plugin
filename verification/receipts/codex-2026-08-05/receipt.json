@@ -1,0 +1,76 @@
+{
+  "agentVersion": "0.146.0",
+  "method": "interactive-lifecycle-v1",
+  "observedAt": "2026-08-05T15:10:19.648Z",
+  "command": [
+    "node",
+    "scripts/capture-lifecycle-run.mjs",
+    "--pane-id",
+    "w8:p9"
+  ],
+  "environment": {
+    "sandboxName": "herdr-codex-9944e6e6bf2f",
+    "agentKind": "codex",
+    "runtime": "node24"
+  },
+  "exitStatus": 0,
+  "phases": [
+    {
+      "name": "install",
+      "exitStatus": 0,
+      "output": "receipts/codex-2026-08-05/install.txt",
+      "outputSha256": "27b1419a91eb6729d53ae70a63b3c61d50084cc4688cc8f6ce9c6d9478421e67"
+    },
+    {
+      "name": "authenticate",
+      "exitStatus": 0,
+      "output": "receipts/codex-2026-08-05/authenticate.txt",
+      "outputSha256": "0974479402f3f92b3366eee18fb64cb2920ebe71127ec016c912a2b0f477e0ca"
+    },
+    {
+      "name": "modify",
+      "exitStatus": 0,
+      "output": "receipts/codex-2026-08-05/modify.txt",
+      "outputSha256": "163ea2a60968cde386e22874fa049cb79512f5104499e8f90fca128b67019153"
+    },
+    {
+      "name": "export",
+      "exitStatus": 0,
+      "output": "receipts/codex-2026-08-05/export.txt",
+      "outputSha256": "b3ca6303b597464a7eb28437be4dad833f255785cf029179eb0ba512c95ff921"
+    },
+    {
+      "name": "stop",
+      "exitStatus": 0,
+      "output": "receipts/codex-2026-08-05/stop.txt",
+      "outputSha256": "442a807ab3d87d3f5b512b12c7fba32b3447464c7ceb8aac5eb2f64bd05a8ce6"
+    },
+    {
+      "name": "reconnect",
+      "exitStatus": 0,
+      "output": "receipts/codex-2026-08-05/reconnect.txt",
+      "outputSha256": "5fd7c4e85d67a35fb271bff116161913cf72f168953b32e9655701584c2d7f24"
+    },
+    {
+      "name": "persistence",
+      "exitStatus": 0,
+      "output": "receipts/codex-2026-08-05/persistence.txt",
+      "outputSha256": "4b68ebef2c29c9ad629e987a4239c7174df685aaaa61f25e16bdc2876e323efc"
+    },
+    {
+      "name": "orchestrated",
+      "exitStatus": 0,
+      "output": "receipts/codex-2026-08-05/orchestrated.txt",
+      "outputSha256": "3111119758ab2c3bc0302f2c83eb2405a82cfc250d5506f4772bf7431d7782fc"
+    }
+  ],
+  "claims": [
+    "credentialPersistence",
+    "herdrDetection",
+    "interactiveLaunch",
+    "linuxInstallation",
+    "remoteAuthentication",
+    "sandboxRuntime",
+    "ttyBehavior"
+  ]
+}

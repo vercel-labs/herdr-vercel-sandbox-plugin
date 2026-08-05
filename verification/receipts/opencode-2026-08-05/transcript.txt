@@ -1,0 +1,49 @@
+Lifecycle capture started 2026-08-05T15:20:20.459Z for pane w8:pA
+
+=== install ===
+observedAt: 2026-08-05T15:20:22.465Z
+sandboxName: herdr-opencode-9c3c757ce13b
+installedVersion: 1.18.9
+preparedAt: 2026-08-05T15:17:11.866Z
+syncedFileCount: 69
+lifecycleState: ready
+
+=== authenticate ===
+observedAt: 2026-08-05T15:20:23.837Z
+method: not recorded
+note: completed interactively inside the Sandbox; no credential material captured by design
+
+=== modify ===
+observedAt: 2026-08-05T15:21:40.528Z
+probe: remote fixture file content
+command: cat '/vercel/sandbox/workspace/agent-conformance-output.txt'
+exitStatus: 0
+stdout: Herdr agent adapter works.
+stderr: Vercel CLI 56.2.0 (Node.js 26.4.0)
+$ sh -lc cat '/vercel/sandbox/workspace/agent-conformance-output.txt'
+
+=== export ===
+observedAt: 2026-08-05T15:22:12.100Z
+lastAppliedExportCommit: undefined
+local git status --short:
+M verification/adapters.json
+?? verification/receipts/codex-2026-08-05/
+
+=== stop ===
+observedAt: 2026-08-05T15:22:14.288Z
+lifecycleState: ready
+stoppedAt: undefined
+
+=== reconnect ===
+observedAt: 2026-08-05T15:22:31.448Z
+lifecycleState: ready
+lastConnectedAt: 2026-08-05T15:22:21.703Z
+
+=== persistence ===
+observedAt: 2026-08-05T15:22:34.332Z
+probe: persisted fixture file content
+command: cat '/vercel/sandbox/workspace/agent-conformance-output.txt'
+exitStatus: 0
+stdout: Herdr agent adapter works.
+stderr: Vercel CLI 56.2.0 (Node.js 26.4.0)
+$ sh -lc cat '/vercel/sandbox/workspace/agent-conformance-output.txt'

@@ -1,0 +1,6 @@
+observedAt: 2026-08-05T15:05:38.953Z
+sandboxName: herdr-codex-9944e6e6bf2f
+installedVersion: codex-cli 0.146.0
+preparedAt: 2026-08-05T15:00:23.087Z
+syncedFileCount: 59
+lifecycleState: ready

@@ -1,0 +1,5 @@
+observedAt: 2026-08-05T15:22:12.100Z
+lastAppliedExportCommit: undefined
+local git status --short:
+M verification/adapters.json
+?? verification/receipts/codex-2026-08-05/

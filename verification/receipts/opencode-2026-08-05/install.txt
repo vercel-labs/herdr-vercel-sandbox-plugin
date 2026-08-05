@@ -1,0 +1,6 @@
+observedAt: 2026-08-05T15:20:22.465Z
+sandboxName: herdr-opencode-9c3c757ce13b
+installedVersion: 1.18.9
+preparedAt: 2026-08-05T15:17:11.866Z
+syncedFileCount: 69
+lifecycleState: ready

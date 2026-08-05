@@ -1,0 +1,3 @@
+observedAt: 2026-08-05T15:20:23.837Z
+method: not recorded
+note: completed interactively inside the Sandbox; no credential material captured by design

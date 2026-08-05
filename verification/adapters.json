@@ -57,7 +57,28 @@
         "credentialPersistence",
         "herdrDetection",
         "sandboxRuntime"
-      ]
+      ],
+      "behaviorReceipt": {
+        "agentVersion": "0.146.0",
+        "method": "interactive-lifecycle-v1",
+        "observedAt": "2026-08-05T15:10:19.648Z",
+        "command": [
+          "node",
+          "scripts/capture-lifecycle-run.mjs",
+          "--pane-id",
+          "w8:p9"
+        ],
+        "environment": {
+          "sandboxName": "herdr-codex-9944e6e6bf2f",
+          "agentKind": "codex",
+          "runtime": "node24"
+        },
+        "exitStatus": 0,
+        "transcript": "receipts/codex-2026-08-05/transcript.txt",
+        "transcriptSha256": "496461fd8f13253c3f8255505ffe94973bbb175bfdcac154e93bf32f89173535",
+        "receipt": "receipts/codex-2026-08-05/receipt.json",
+        "receiptSha256": "3eb07a1d91cfaf2ba20a03ac55e39a2b52e778ecf2a5a853eb8bb5becc4e56d1"
+      }
     },
     "opencode-1.18.9": {
       "kind": "opencode",
@@ -134,7 +155,28 @@
         "ttyBehavior",
         "herdrDetection",
         "sandboxRuntime"
-      ]
+      ],
+      "behaviorReceipt": {
+        "agentVersion": "1.18.9",
+        "method": "interactive-lifecycle-v1",
+        "observedAt": "2026-08-05T15:22:42.984Z",
+        "command": [
+          "node",
+          "scripts/capture-lifecycle-run.mjs",
+          "--pane-id",
+          "w8:pA"
+        ],
+        "environment": {
+          "sandboxName": "herdr-opencode-9c3c757ce13b",
+          "agentKind": "opencode",
+          "runtime": "node24"
+        },
+        "exitStatus": 0,
+        "transcript": "receipts/opencode-2026-08-05/transcript.txt",
+        "transcriptSha256": "ddf48375eb1b40b742fffd5199e41fedadf5df65349f6c0df6b331cd961371b4",
+        "receipt": "receipts/opencode-2026-08-05/receipt.json",
+        "receiptSha256": "14a07ed6e585856002d7694024f8fdff8c2d92725bfc9c675b53cabdb716f27e"
+      }
     },
     "claude-code-2.1.220": {
       "kind": "claude-code",
