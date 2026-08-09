@@ -1,0 +1,14 @@
+command=vercel sandbox exec <saved-target> herdr-public-image-probe-20260809 -- sh -lc <version-checks>
+exit_status=0
+observed_output:
+PRETTY_NAME="Ubuntu 26.04 LTS"
+v24.19.0
+Python 3.14.4
+git version 2.53.0
+ripgrep 15.1.0
+codex-cli 0.147.0
+1.18.15
+2.1.224 (Claude Code)
+copy_round_trip_sha256=e646087be381b629262a31c3e1655c0c6e03d7fb85b1f4f0379def8a7769f08f
+stop_resume_persistence=passed
+cleanup=passed

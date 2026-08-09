@@ -1,0 +1,8 @@
+command=node src/bridge.mjs connect --state-dir <temporary-state> --config-dir <temporary-config> --pane-id e2e:p1
+transport=PTY
+exit_status=0
+observed_output:
+$ sh -lc printf 'HERDR_IMAGE_E2E_OK\n'
+HERDR_IMAGE_E2E_OK
+connection to herdr-image-e2e-20260809 closed.
+terminal_restore_sequence_emitted=true

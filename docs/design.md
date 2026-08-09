@@ -15,7 +15,7 @@ Herdr plugin v1 requires actions to be declared in `herdr-plugin.toml`; runtime 
 3. It resolves the Vercel target from explicit `scope` plus `project`, or from the worktree's `.vercel/project.json`. A missing link opens the official interactive link flow in a local onboarding pane and returns without creating remote or local lifecycle state.
 4. Only after both gates pass does the plugin run a read-only target-access check, save a `provisional` mapping, and ask Herdr to split the focused pane. A failed pane launch removes that provisional mapping.
 5. The new pane runs a local wrapper with `HERDR_AGENT` set from `capabilities.herdrDetectionKind`.
-6. The wrapper advances state to `creating`, creates a named Sandbox with `sandbox create --name`, and immediately records `remoteCreated: true` and `created`. Later setup failures retain the mapping.
+6. The wrapper advances state to `creating`, creates a named Sandbox with `sandbox create --name --image` (defaulting to the public `vercel/sandbox/universal:latest` managed image), and immediately records `remoteCreated: true` and `created`. A mutually exclusive legacy `runtime` setting remains accepted. Later setup failures retain the mapping.
 7. The plugin prints a complete upload manifest and digest before the first transfer. A second matching invocation within 10 minutes approves it; custom exclusions and exact sensitive-path overrides are applied before the archive is built, and the digest is re-verified at archive time.
 8. The bridge initializes a remote Git baseline, records `prepared`, and runs the adapter installation script.
 9. The bridge runs the adapter version command, requires the pinned version, records it, and advances to `ready`.

@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
+  DEFAULT_SANDBOX_IMAGE,
   REMOTE_ROOT,
   STATE_VERSION,
   TERMINAL_RESTORE_SEQUENCE,
@@ -27,6 +28,7 @@ import {
   resolveProjectConfig,
   restoreTerminal,
   sandboxNamesForDeletion,
+  sandboxCreateSourceArgs,
   savePaneEntry,
   saveState,
   sensitiveContentReason,
@@ -257,7 +259,7 @@ fi
   }
 });
 
-test("delete bridge checkpoints partial progress and leaves failed Sandboxes mapped for retry", async () => {
+test("delete bridge rejects a zero-exit spinner failure and leaves failed Sandboxes mapped for retry", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "herdr-delete-partial-test-"));
   const stateDir = path.join(dir, "state");
   const configDir = path.join(dir, "config");
@@ -271,8 +273,8 @@ if [ "$2" = "--help" ]; then
 	  printf 'connect exec create stop remove\\n'
 	fi
 	if [ "$2" = "remove" ] && [ "$7" = "herdr-opencode-blocked" ]; then
-	  printf '[FAILED: permission denied]\\n'
-	  exit 1
+	  printf '✖ permission denied\\n'
+	  exit 0
 	fi
 `, "utf8");
     await chmod(fakeVercel, 0o755);
@@ -565,6 +567,12 @@ test("config accepts generic per-agent arguments and rejects malformed values", 
     assert.equal(config.agentKind, "codex");
     assert.deepEqual(config.agentArgs.codex, ["--model", "gpt-5.6-terra"]);
 
+    await writeFile(path.join(dir, "config.json"), JSON.stringify({ image: "vercel/sandbox/universal:latest" }));
+    assert.equal((await readConfig(dir)).image, "vercel/sandbox/universal:latest");
+
+    await writeFile(path.join(dir, "config.json"), JSON.stringify({ image: "public-team/public-project/dev:latest", runtime: "node24" }));
+    await assert.rejects(readConfig(dir), /image and runtime are mutually exclusive/);
+
     await writeFile(path.join(dir, "config.json"), JSON.stringify({ allowCandidateAgents: "yes" }));
     await assert.rejects(readConfig(dir), /allowCandidateAgents must be a boolean/);
 
@@ -573,6 +581,19 @@ test("config accepts generic per-agent arguments and rejects malformed values", 
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("Sandbox creation defaults to the public universal image and preserves explicit sources", () => {
+  assert.deepEqual(sandboxCreateSourceArgs({}), ["--image", DEFAULT_SANDBOX_IMAGE]);
+  assert.deepEqual(
+    sandboxCreateSourceArgs({ image: "vcr.vercel.com/public-team/public-project/dev:v1" }),
+    ["--image", "vcr.vercel.com/public-team/public-project/dev:v1"],
+  );
+  assert.deepEqual(sandboxCreateSourceArgs({ runtime: "node24" }), ["--runtime", "node24"]);
+  assert.throws(
+    () => sandboxCreateSourceArgs({ image: DEFAULT_SANDBOX_IMAGE, runtime: "node24" }),
+    /mutually exclusive/,
+  );
 });
 
 test("Vercel authentication distinguishes signed-in, signed-out, and unknown failures", async () => {

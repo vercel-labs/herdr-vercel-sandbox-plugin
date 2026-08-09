@@ -13,6 +13,7 @@ import {
   run,
   sandboxArgs,
   sandboxCli,
+  sandboxCreateSourceArgs,
   sandboxNamesForDeletion,
   savePaneEntry,
   shellQuote,
@@ -82,7 +83,7 @@ function vercelChecked(args, operation) {
   return result;
 }
 
-function preflight() {
+function preflight({ requireImage = false } = {}) {
   const help = run(cli.executable, [...cli.prefix, "--help"], { capture: true });
   if (
     !help.stdout.includes("connect")
@@ -92,10 +93,17 @@ function preflight() {
   ) {
     throw new Error(`${cli.executable} does not expose the required Sandbox CLI commands.`);
   }
+  if (requireImage) {
+    const createHelp = run(cli.executable, [...cli.prefix, "create", "--help"], { capture: true });
+    if (!createHelp.stdout.includes("--image")) {
+      throw new Error(`${cli.executable} does not support Sandbox images. Install Vercel CLI 58.7.1 or newer.`);
+    }
+  }
 }
 
 async function prepare() {
-  preflight();
+  const sourceArgs = sandboxCreateSourceArgs(config);
+  preflight({ requireImage: !entry.remoteCreated && sourceArgs[0] === "--image" });
   const archive = await createWorkspaceArchive(entry.localRoot, {
     exclusions: entry.uploadExclusions,
     overrides: entry.uploadOverrides,
@@ -113,7 +121,7 @@ async function prepare() {
       try {
         vercelChecked([
           "create", "--name", entry.sandboxName,
-          "--runtime", config.runtime ?? "node24",
+          ...sourceArgs,
           "--timeout", config.timeout ?? "1h",
         ], "create");
       } catch (error) {
@@ -324,7 +332,10 @@ async function deleteSandboxes() {
     const result = vercel(["remove", name], { allowFailure: true, capture: true });
     const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
     const missing = /Named sandbox .* not found|status code:\s*404 Not Found/i.test(output);
-    const failed = result.status !== 0 || /\[FAILED(?::|\])/i.test(output);
+    const failed = result.status !== 0
+      || /\[FAILED(?::|\])/i.test(output)
+      || /^\s*✖/mu.test(output)
+      || /status code:\s*[45]\d\d/i.test(output);
     if (failed && !missing) {
       throw new Error(`Could not permanently delete ${name}.\n${output.trim()}`);
     }

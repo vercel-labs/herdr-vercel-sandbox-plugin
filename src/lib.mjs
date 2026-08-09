@@ -6,6 +6,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 
 export const REMOTE_ROOT = "/vercel/sandbox/workspace";
+export const DEFAULT_SANDBOX_IMAGE = "vercel/sandbox/universal:latest";
 export const STATE_VERSION = 3;
 export const DELETION_CONFIRMATION_TTL_MS = 60_000;
 export const DELETION_CONFIRMATION_COLLISION_GRACE_MS = 5_000;
@@ -424,7 +425,7 @@ export async function createWorkspaceArchive(root, options = {}) {
 // rejected: a silently ignored key in this file can mean an unintended upload.
 const CONFIG_KEYS = new Set([
   "agentKind", "agentArgs", "allowCandidateAgents", "allowOrchestratedDeletion", "customAgents",
-  "runtime", "timeout", "scope", "project", "projectConfigPath", "vercelBin",
+  "image", "runtime", "timeout", "scope", "project", "projectConfigPath", "vercelBin",
   "uploadExcludes", "sensitiveFileOverrides",
   "uploadExclusions", "uploadOverrides",
 ]);
@@ -451,10 +452,13 @@ export async function readConfig(configDir) {
     config.scope ??= linked.orgId;
     config.project ??= linked.projectId;
   }
-  for (const field of ["agentKind", "runtime", "timeout", "vercelBin", "projectConfigPath"]) {
+  for (const field of ["agentKind", "image", "runtime", "timeout", "vercelBin", "projectConfigPath"]) {
     if (config[field] !== undefined && typeof config[field] !== "string") {
       throw new Error(`config.json ${field} must be a string`);
     }
+  }
+  if (config.image !== undefined && config.runtime !== undefined) {
+    throw new Error("config.json image and runtime are mutually exclusive; keep only image for managed or public images");
   }
   if (config.allowCandidateAgents !== undefined && typeof config.allowCandidateAgents !== "boolean") {
     throw new Error("config.json allowCandidateAgents must be a boolean");
@@ -576,6 +580,14 @@ export function sandboxCli(config = {}) {
 export function sandboxArgs(cli, args) {
   const [subcommand, ...rest] = args;
   return [...cli.prefix, subcommand, ...cli.scopeArgs, ...rest];
+}
+
+export function sandboxCreateSourceArgs(config = {}) {
+  if (config.image !== undefined && config.runtime !== undefined) {
+    throw new Error("Sandbox image and runtime are mutually exclusive.");
+  }
+  if (config.runtime !== undefined) return ["--runtime", config.runtime];
+  return ["--image", config.image ?? DEFAULT_SANDBOX_IMAGE];
 }
 
 export function classifySandboxExecFailure(result) {

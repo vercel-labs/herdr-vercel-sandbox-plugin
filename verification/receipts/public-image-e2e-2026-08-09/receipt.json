@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "verificationId": "public-image-bridge-e2e-2026-08-09",
+  "method": "manual-command-capture-v1",
+  "proofLevel": "OBSERVED_LIVE_RUN",
+  "observedAt": "2026-08-09T13:29:00.000Z",
+  "completedAt": "2026-08-09T13:34:00.000Z",
+  "status": "passed",
+  "scope": "Herdr bridge public-image creation, upload, preparation, PTY launch, stop, persistence, reconnect, and permanent deletion using a credential-free fixture agent",
+  "exclusions": [
+    "Built-in agent authentication",
+    "Built-in agent modification and Git patch export",
+    "Arbitrary non-Vercel-managed public VCR repositories",
+    "Herdr pane split and action dispatch"
+  ],
+  "artifacts": {
+    "environment": {
+      "path": "environment.txt",
+      "sha256": "6954ce7ea59efcc0229dc46920e19b70c49b9804b9a7cd7d65923e75a014f80a"
+    },
+    "imageInspection": {
+      "path": "image-inspection.txt",
+      "sha256": "0a323bdb74c025af753e8819169ca426d16f6a4b19755aa797e43911757fec67"
+    },
+    "prepare": {
+      "path": "prepare.txt",
+      "sha256": "075c7fa72fc9730164ce4a5b7cd83fdcaad5a99d9176d45253a1f12d1ff23e6e"
+    },
+    "connect": {
+      "path": "connect.txt",
+      "sha256": "2592d9bd649db48996dd6f065b4b18fa360eff083ddda62b0370dbdac675c95b"
+    },
+    "persistence": {
+      "path": "persistence.txt",
+      "sha256": "adc39ef6f0b3373bf4524ea2c09a94cf241277dba7d9b6449aca9b7c2b793ab9"
+    },
+    "delete": {
+      "path": "delete.txt",
+      "sha256": "76cd9ddbe9a7f332e1b3ff1a6a8def866fe1e30b2d4a493307460f18fe2f8956"
+    }
+  },
+  "cleanup": {
+    "sandboxRemoved": true,
+    "remainingSandboxesInTarget": 0
+  }
+}

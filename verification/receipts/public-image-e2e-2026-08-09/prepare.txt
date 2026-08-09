@@ -1,0 +1,15 @@
+command=node src/bridge.mjs prepare --state-dir <temporary-state> --config-dir <temporary-config> --pane-id e2e:p1
+first_attempt_exit_status=1
+first_attempt_result=restricted harness network returned fetch failed; read-only remote list confirmed no Sandbox was created
+retry_environment=network-enabled execution
+retry_exit_status=0
+observed_output:
+Syncing 79 approved Git worktree files to herdr-image-e2e-20260809...
+Sandbox created.
+Copied workspace.tar.gz to /tmp/herdr-e2e-p1.tar.gz successfully.
+fixture-agent 1.0.0
+prepared=true
+remoteCreated=true
+lifecycleState=prepared
+lastError=null
+notes=The Ubuntu tar implementation emitted non-fatal LIBARCHIVE.xattr.com.apple.provenance warnings while extracting the macOS-created archive.

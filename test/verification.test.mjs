@@ -251,6 +251,21 @@ test("remote freshness verification rejects an upstream that no longer contains 
   });
 });
 
+test("public-image E2E receipt retains hash-verified phase artifacts", async () => {
+  const receiptDir = path.resolve("verification/receipts/public-image-e2e-2026-08-09");
+  const receipt = JSON.parse(await readFile(path.join(receiptDir, "receipt.json"), "utf8"));
+
+  assert.equal(receipt.status, "passed");
+  assert.equal(receipt.proofLevel, "OBSERVED_LIVE_RUN");
+  assert.equal(receipt.cleanup.sandboxRemoved, true);
+  assert.equal(receipt.cleanup.remainingSandboxesInTarget, 0);
+
+  for (const artifact of Object.values(receipt.artifacts)) {
+    const contents = await readFile(path.join(receiptDir, artifact.path));
+    assert.equal(digest(contents), artifact.sha256, `${artifact.path} matches its receipt hash`);
+  }
+});
+
 test("receipt metadata, transcript, phase artifacts, and required phases are independently checked", async () => {
   await withFixture(async ({ adapter, manifest, evidenceRoot, record }) => {
     await writeFile(path.join(evidenceRoot, "receipts", "transcript.txt"), "tampered\n");

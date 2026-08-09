@@ -1,0 +1,12 @@
+marker_path=/vercel/sandbox/workspace/.herdr-image-e2e-marker
+marker_contents=persistent
+stop_command=node src/bridge.mjs stop --state-dir <temporary-state> --config-dir <temporary-config> --pane-id e2e:p1
+stop_exit_status=0
+stop_observed_output=Sandbox stopped; persistent filesystem was preserved.
+resume_command=vercel sandbox exec <saved-target> herdr-image-e2e-20260809 -- sh -lc <marker-check>
+resume_exit_status=0
+resume_observed_output=PERSISTENCE_OK
+reconnect_command=node src/bridge.mjs connect --state-dir <temporary-state> --config-dir <temporary-config> --pane-id e2e:p1
+reconnect_transport=PTY
+reconnect_exit_status=0
+reconnect_observed_output=HERDR_IMAGE_E2E_OK

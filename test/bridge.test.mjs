@@ -49,6 +49,10 @@ if (args[0] === "sandbox" && args[1] === "--help") {
   process.stdout.write("connect exec create stop remove\\n");
   process.exit(0);
 }
+if (args[0] === "sandbox" && args[1] === "create" && args.includes("--help")) {
+  process.stdout.write(process.env.HERDR_FAKE_NO_IMAGE_HELP ? "--name --runtime --timeout\\n" : "--name --image --runtime --timeout\\n");
+  process.exit(0);
+}
 const subcommand = args[1];
 if (subcommand === "exec" && process.env.HERDR_FAKE_EXEC_FAILURE) {
   process.stderr.write(process.env.HERDR_FAKE_EXEC_FAILURE + "\\n");
@@ -150,11 +154,13 @@ test("bridge creates only a provisional mapping, then reconnects with exec using
     const first = runBridge(f, "prepare");
     assert.equal(first.status, 0, first.stderr);
     let recorded = await calls(f);
-    const createCalls = recorded.filter((args) => isCall(args, "create"));
+    const createCalls = recorded.filter((args) => isCall(args, "create") && !args.includes("--help"));
     assert.equal(createCalls.length, 1);
     assertSavedTarget(createCalls[0]);
     assert.match(createCalls[0].join(" "), /--name herdr-fixture-agent-test/);
-    for (const args of recorded.filter((value) => ["create", "exec", "copy"].includes(value[1]))) assertSavedTarget(args);
+    assert.match(createCalls[0].join(" "), /--image vercel\/sandbox\/universal:latest/);
+    assert.equal(createCalls[0].includes("--runtime"), false);
+    for (const args of recorded.filter((value) => ["create", "exec", "copy"].includes(value[1]) && !value.includes("--help"))) assertSavedTarget(args);
 
     let state = await loadState(f.stateDir);
     assert.equal(state.panes[PANE_ID].remoteCreated, true);
@@ -168,9 +174,25 @@ test("bridge creates only a provisional mapping, then reconnects with exec using
     const reconnect = runBridge(f, "prepare");
     assert.equal(reconnect.status, 0, reconnect.stderr);
     recorded = await calls(f);
-    assert.equal(recorded.some((args) => isCall(args, "create")), false);
+    assert.equal(recorded.some((args) => isCall(args, "create") && !args.includes("--help")), false);
     assert.ok(recorded.some((args) => isCall(args, "exec")));
     for (const args of recorded.filter((value) => ["exec", "copy"].includes(value[1]))) assertSavedTarget(args);
+  } finally {
+    await rm(f.dir, { recursive: true, force: true });
+  }
+});
+
+test("image-backed creation fails before remote mutation when the CLI lacks image support", async () => {
+  const f = await fixture();
+  try {
+    const result = runBridge(f, "prepare", { HERDR_FAKE_NO_IMAGE_HELP: "1" });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Install Vercel CLI 58\.7\.1 or newer/);
+    const recorded = await calls(f);
+    assert.equal(recorded.some((args) => isCall(args, "create") && !args.includes("--help")), false);
+    const state = await loadState(f.stateDir);
+    assert.equal(state.panes[PANE_ID].lifecycleState, "provisional");
+    assert.equal(state.panes[PANE_ID].remoteCreated, false);
   } finally {
     await rm(f.dir, { recursive: true, force: true });
   }

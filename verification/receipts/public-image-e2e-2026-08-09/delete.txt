@@ -1,0 +1,7 @@
+command=node src/bridge.mjs delete --state-dir <temporary-state> --config-dir <temporary-config> --pane-id e2e:p1
+exit_status=0
+observed_output=Permanently deleted herdr-image-e2e-20260809.
+cleanup_check=vercel sandbox list <saved-target> --limit 50
+cleanup_exit_status=0
+cleanup_observed_output=NAME STATUS CREATED MEMORY VCPUS RUNTIME TIMEOUT SNAPSHOT TAGS
+remaining_sandboxes=0

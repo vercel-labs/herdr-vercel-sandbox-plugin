@@ -1,0 +1,14 @@
+observed_at=2026-08-09T13:29:00Z
+vercel_cli=58.7.1
+herdr=0.7.5
+node=26.4.0
+plugin_source=local-working-tree
+image=vercel/sandbox/universal:latest
+sandbox_name=herdr-image-e2e-20260809
+timeout=5m
+workspace_manifest_digest=b7b80e090240eb1f1d2420c248850bbc2433ff835fa98f8792cd79225d3ea169
+included_files=79
+excluded_files=1
+agent_kind=fixture-agent
+agent_version=1.0.0
+target=redacted-team-and-project
